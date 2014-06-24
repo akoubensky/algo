@@ -7,6 +7,8 @@ import java.util.Stack;
  * - iterate(action) Внутренняя итерация дерева
  * - iterator() Выдает внешний итератор дерева, построенный на основе рекурсии
  * - stackIterator() Выдает внешний итератор дерева, построенный на основе стека
+ * - iteratorsIterator() Выдает внешний итератор дерева, построенный на основе
+ *                       операций над итераторами
  * @param <T> Тип элементов дерева
  */
 class BinTree<T> implements Iterable<T> {
@@ -255,15 +257,33 @@ class BinTree<T> implements Iterable<T> {
 			throw new UnsupportedOperationException();
 		}
 	}
+	
+	//-------------------------------------------------------------------
+	// Разные реализации итераторов
+	//-------------------------------------------------------------------
 
+	@Override
 	public Iterator<T> iterator() {
 		// Реализация на основе прохода по родительским ссылкам
 		return new TreeIterator<T>(root);
 	}
 
+	/**
+	 * Реализация внешнего итератора на основе стека.
+	 * 
+	 * @return	Итератор на основе стека
+	 */
 	public Iterator<T> stackIterator() {
-		// Реализация на основе стека
 		return new StackTreeIterator<T>(root);
+	}
+	
+	/**
+	 * Реализация внешнего итератора на основе операций над итераторами.
+	 * 
+	 * @return	Итератор на основе операций над итераторами
+	 */
+	public Iterator<T> iteratorsIterator() {
+		return iterator(root);
 	}
 
 	/**
@@ -302,6 +322,12 @@ class BinTree<T> implements Iterable<T> {
 
 		// Запускаем альтернативный внешний итератор (на основе стека)
 		for (Iterator<Integer> it = tree.stackIterator(); it.hasNext(); ) {
+			System.out.print(" " + it.next());
+		}
+		System.out.println();
+
+		// Запускаем еще один альтернативный внешний итератор (на основе операций с итераторами)
+		for (Iterator<Integer> it = tree.iteratorsIterator(); it.hasNext(); ) {
 			System.out.print(" " + it.next());
 		}
 		System.out.println();
