@@ -1,3 +1,4 @@
+import java.lang.reflect.Array;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +23,9 @@ public class MyDictionary<V> implements Map<String, V> {
 	private final int GROUPS = 100;
 
 	// Массив списков пар <hashCode, value>.
-	private List<SimpleEntry<String, V>>[] hashGroups = new LinkedList[GROUPS];
+	@SuppressWarnings("unchecked")
+	private List<SimpleEntry<String, V>>[] hashGroups =
+		(List<SimpleEntry<String, V>>[])Array.newInstance(SimpleEntry.class, GROUPS);
 
 	// Количество элементов в словаре
 	private int size = 0;

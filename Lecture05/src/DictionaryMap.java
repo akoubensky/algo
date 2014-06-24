@@ -1,3 +1,4 @@
+import java.lang.reflect.Array;
 import java.util.AbstractMap;
 import java.util.AbstractSet;
 import java.util.Iterator;
@@ -30,7 +31,9 @@ public class DictionaryMap<V> extends AbstractMap<String, V> {
 		private final int GROUPS = 100;
 
 		// Массив списков пар <hashCode, value>.
-		private List<Map.Entry<String, V>>[] hashGroups = new LinkedList[GROUPS];
+		@SuppressWarnings("unchecked")
+		private List<Map.Entry<String, V>>[] hashGroups =
+			(List<Map.Entry<String, V>>[])Array.newInstance(LinkedList.class, GROUPS);
 
 		/**
 		 * Реализует итерацию элементов абстрактного множества. Это одно

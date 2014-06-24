@@ -11,6 +11,7 @@ public class StandardHashMaps {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		@SuppressWarnings("unchecked")
 		Map<String, Integer>[] hashMaps = new Map[] {
 				new HashMap<String, Integer>(),
 				new LinkedHashMap<String, Integer>(),
