@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 
 /**
  * Реализация основных операций АВЛ-дерева. В узлах дерева хранятся высоты
@@ -15,7 +13,7 @@ import java.util.Arrays;
  * @param <K> тип ключа
  * @param <V> тип значения
  */
-public class AVLTreeH<K extends Comparable<K>, V> {
+public class AVLTreeH<K extends Comparable<K>, V> extends AVLTree<K, V> {
 	
 	/**
 	 * Класс представляет узел дерева. Этот класс предназначен только
@@ -25,14 +23,8 @@ public class AVLTreeH<K extends Comparable<K>, V> {
 	 * @param <K> тип ключа
 	 * @param <V> тип значения
 	 */
-	private static class Node<K, V> {
-		// Ссылки на левое и правое поддеревья:
-		Node<K, V> left, right;
-		// Ключ:
-		K key;
-		// Значение:
-		V value;
-		// Высота соответствующего поддерва:
+	private static class Node<K, V> extends TreeNode<K, V> {
+		// Высота соответствующего поддерева:
 		int height;
 
 		/**
@@ -44,8 +36,8 @@ public class AVLTreeH<K extends Comparable<K>, V> {
 		 * @param right правое поддерево
 		 */
 		Node(K key, V value, int height, Node<K, V> left, Node<K, V> right) {
-			this.key = key; this.value = value; this.height = height;
-			this.left = left; this.right = right;
+			super(key, value, left, right);
+			this.height = height;
 		}
 
 		/**
@@ -53,84 +45,154 @@ public class AVLTreeH<K extends Comparable<K>, V> {
 		 * @param key ключ
 		 * @param value значение
 		 */
-		Node(K key, V value) { this(key, value, 1, null, null); }
+		Node(K key, V value) {
+			super(key, value);
+			this.height = 1;
+		}
 	}
 
-	// Корень дерева.
-	Node<K, V> root = null;
-
-	/**
-	 * Поиск в дереве по ключу.
-	 * @param key ключ поиска.
-	 * @return найденное значение или null, если такого ключа нет в дереве.
-	 */
-	public V get(K key) {
+	
+	@Override
+	public V put(K key, V value) {
 		// Проверка: ключ поиска не должен быть пустым.
 		if (key == null) throw new NullPointerException("null key");
 
-		// Проход по дереву от корня до искомого узла.
-		Node<K, V> current = root;
-		while (current != null) {
-			if (key.compareTo(current.key) == 0) {
-				return current.value;
-			} else if (key.compareTo(current.key) < 0) {
-				current = current.left;
-			} else {
-				current = current.right;
-			}
-		}
-		// Ключ не найден.
-		return null;
-	}
-	
-	public V put(K key, V value) {
 		V oldValue = get(key);
-		root = put(key, value, root);
+		root = put(key, value, (Node<K,V>)root);
 		return oldValue;
 	}
 	
+	@Override
+	public V remove(K key) {
+		// Проверка: ключ поиска не должен быть пустым.
+		if (key == null) throw new NullPointerException("null key");
+
+		V oldValue = get(key);
+		root = remove(key, (Node<K,V>)root);
+		return oldValue;
+	}
+	
+	/**
+	 * Вставка новой пары (ключ, значение) в поддерево, корнем которого является
+	 * заданный узел. При необходимости производится балансировка дерева.
+	 * 
+	 * @param key	Ключ вставляемой пары.
+	 * @param value	Значение во вставляемой паре.
+	 * @param node	Узел, являющийся корнем дерева, в которое производится вставка.
+	 * @return		Модифицированное и сбалансированное дерево.
+	 */
 	private Node<K,V> put(K key, V value, Node<K,V> node) {
 		if (node == null) {
 			return new Node<K,V>(key, value);
 		} else {
 			if (key.compareTo(node.key) < 0) {
-				node.left = put(key, value, node.left);
+				// Вставка в левое поддерево
+				node.left = put(key, value, (Node<K,V>)node.left);
 			} else if (key.compareTo(node.key) > 0) {
-				node.right = put(key, value, node.right);
+				// Вставка в правое поддерево
+				node.right = put(key, value, (Node<K,V>)node.right);
 			} else {
+				// Замена значения в текущем узле
 				node.value = value;
+				return node;
 			}
-			if (Math.abs((node.left == null ? 0 : node.left.height) -
-					     (node.right == null ? 0 : node.right.height)) == 2) {
+			// После вставки, возможно, необходимо выполнить балансировку узла.
+			if (Math.abs((node.left == null ? 0 : ((Node<K,V>)node.left).height) -
+					     (node.right == null ? 0 : ((Node<K,V>)node.right).height)) == 2) {
 				node = balance(node);
 			}
+			// Пересчитываем высоту вновь образованного сбалансированного дерева.
 			recalcHeight(node);
 			return node;
 		}
 	}
 	
+	/**
+	 * Удаление узла по заданному ключу из поддерева, корнем которого является
+	 * заданный узел. При необходимости производится балансировка дерева.
+	 * 
+	 * @param key	Ключ удаляемого узла.
+	 * @param node	Корень поддерева, из которого происходит удаление.
+	 * @return		Модифицированное сбалансированное дерево.
+	 */
+	private Node<K, V> remove(K key, Node<K, V> node) {
+		if (node == null) {
+			return null;
+		} else if (key.compareTo(node.key) == 0) {
+			// Узел найден. Смотрим, можем ли мы его удалить.
+			if (node.left == null) {
+				// Узел заменяется его правым поддеревом
+				return (Node<K,V>)node.right;
+			} else if (node.right == null) {
+				// Узел заменяется его левым поддеревом
+				return (Node<K,V>)node.left;
+			} else {
+				// Ищем узел, который можно поставить на место удаляемого.
+				Node<K, V> current = (Node<K,V>)node.right;
+				while (current.left != null) current = (Node<K,V>)current.left;
+				// Копируем узел
+				node.key = current.key;
+				node.value = current.value;
+				// Теперь удаляем вместо исходного найденный узел.
+				node.right = remove(current.key, (Node<K,V>)node.right);
+			}
+		} else if (key.compareTo(node.key) < 0) {
+			// Удаляем узел из левого поддерева
+			node.left = remove(key, (Node<K,V>)node.left);
+		} else {
+			// Удаляем узел из правого поддерева
+			node.right = remove(key, (Node<K,V>)node.right);
+		}
+		// После удаления, возможно, необходимо выполнить балансировку узла.
+		if (Math.abs((node.left == null ? 0 : ((Node<K,V>)node.left).height) -
+			     (node.right == null ? 0 : ((Node<K,V>)node.right).height)) == 2) {
+			node = balance(node);
+		}
+		// Пересчитываем высоту вновь образованного сбалансированного дерева.
+		recalcHeight(node);
+		return node;
+	}
+	
+	/**
+	 * Балансирует поддерево, корнем которого является заданный разбалансированный узел.
+	 * 
+	 * @param node	Узел, баланс которого больше единицы.
+	 * @return		Результат балансировки.
+	 */
 	private Node<K,V> balance(Node<K,V> node) {
-		int heightLeft = node.left == null ? 0 : node.left.height;
-		int heightRight = node.right == null ? 0 : node.right.height;
+		// Высота левого поддерева.
+		int heightLeft = node.left == null ? 0 : ((Node<K,V>)node.left).height;
+		// Высота правого поддерева.
+		int heightRight = node.right == null ? 0 : ((Node<K,V>)node.right).height;
+		
 		if (heightLeft > heightRight) {
-			Node<K,V> child = node.left;
-			if ((child.left == null ? 0 : child.left.height) <
-			    (child.right == null ? 0 : child.right.height)) {
+			Node<K,V> child = (Node<K,V>)node.left;
+			if ((child.left == null ? 0 : ((Node<K,V>)child.left).height) <
+			    (child.right == null ? 0 : ((Node<K,V>)child.right).height)) {
+				// Необходим двойной поворот
 				node.left = pivotRight(child);
 			}
 			return pivotLeft(node);
 		} else {
-			Node<K,V> child = node.right;
-			if ((child.left == null ? 0 : child.left.height) >
-			    (child.right == null ? 0 : child.right.height)) {
+			Node<K,V> child = (Node<K,V>)node.right;
+			if ((child.left == null ? 0 : ((Node<K,V>)child.left).height) >
+			    (child.right == null ? 0 : ((Node<K,V>)child.right).height)) {
+				// Необходим двойной поворот
 				node.right = pivotLeft(child);
 			}
 			return pivotRight(node);
 		}
 	}
 
+	/**
+	 * Реализует &quot;левый&quot; поворот вокруг заданного узла дерева с пересчетом
+	 * высот узлов, участвующих в повороте.
+	 * 
+	 * @param node	Корневой узел, вокруг которого происходит поворот.
+	 * @return		Результирующее дерево после поворота.
+	 */
 	private Node<K,V> pivotLeft(Node<K,V> node) {
-		Node<K,V> child = node.left;
+		Node<K,V> child = (Node<K,V>)node.left;
 		node.left = child.right;
 		child.right = node;
 		recalcHeight(node);
@@ -138,8 +200,15 @@ public class AVLTreeH<K extends Comparable<K>, V> {
 		return child;
 	}
 	
+	/**
+	 * Реализует &quot;правый&quot; поворот вокруг заданного узла дерева с пересчетом
+	 * высот узлов, участвующих в повороте.
+	 * 
+	 * @param node	Корневой узел, вокруг которого происходит поворот.
+	 * @return		Результирующее дерево после поворота.
+	 */
 	private Node<K,V> pivotRight(Node<K,V> node) {
-		Node<K,V> child = node.right;
+		Node<K,V> child = (Node<K,V>)node.right;
 		node.right = child.left;
 		child.left = node;
 		recalcHeight(node);
@@ -147,52 +216,32 @@ public class AVLTreeH<K extends Comparable<K>, V> {
 		return child;
 	}
 	
+	/**
+	 * Пересчитывает высоту поддерева, корнем которого является заданный узел.
+	 * 
+	 * @param node	Корневой узел, вокруг которого происходит поворот.
+	 */
 	private void recalcHeight(Node<K,V> node) {
-		node.height = 1 + Math.max(node.left == null ? 0 : node.left.height,
-                node.right == null ? 0 : node.right.height);
+		node.height = 1 + Math.max(node.left == null ? 0 : ((Node<K,V>)node.left).height,
+                node.right == null ? 0 : ((Node<K,V>)node.right).height);
 	}
 	
 	/**
-	 * "Красивая" печать дерева.
+	 * Тестирующая функция создает АВЛ-дерево последовательной вставкой элементов.
+	 * @param args не используется.
 	 */
-	public void print() {
-		print(root, 0);
-	}
-
-	/**
-	 * Вспомогательная функция для "красивой" печати дерева.
-	 * @param node корневой узел.
-	 * @param indent начальный отступ при печати.
-	 */
-	private void print(Node<K, V> node, int indent) {
-		// Формируем строку из indent пробелов.
-		char[] spaces = new char[indent];
-		Arrays.fill(spaces, ' ');
-		System.out.print(new String(spaces));
-
-		// Представление пустого дерева.
-		if (node == null) {
-			System.out.println("--");
-			return;
-		}
-
-		// Печать узла и его поддеревьев.
-		System.out.println("<" + node.key + ", " + node.value + ">");
-		print(node.left, indent + 2);
-		print(node.right, indent + 2);
-	}
-
 	public static void main(String[] args) {
 		AVLTreeH<Integer, Integer> tree = new AVLTreeH<Integer, Integer>();
-		for (int i = 1; i <= 10; i++) {
-			tree.put(2*i, 2*i);
+		int[] keys = { 5, 7, 9, 1, 11, 8, 15, 13, 3, 10 };
+		for (int key : keys) {
+			System.out.println("Added: <" + key + ", " + 2*key + ">");
+			tree.put(key, 2*key);
+			tree.print();
+			System.out.println("----------------------------");
 		}
-		tree.put(15, 15);
-		tree.print();
-		System.out.println("----------------------------");
 
-		for (int i = 10; i >= 1; i--) {
-			//tree.remove(2*i);
+		for (int key : keys) {
+			System.out.println("Removed: " + tree.remove(key));
 			tree.print();
 			System.out.println("----------------------------");
 		}
