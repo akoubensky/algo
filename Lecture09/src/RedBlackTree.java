@@ -7,6 +7,8 @@ import java.util.Arrays;
  * 
  * Операция удаления по ключу не реализована, так как корректировка
  * дерева после удаления производится сложнее, чем при вставке.
+ * 
+ * (c) http://algs4.cs.princeton.edu/33balanced/RedBlackBST.java.html
  *
  * @param <K> тип ключа
  * @param <V> тип значения
@@ -16,7 +18,18 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	 * Цвет узлов дерева
 	 */
 	private enum Color {
-		RED, BLACK
+		RED, BLACK;
+		
+		Color flip() {
+			switch (this) {
+			case RED: return BLACK;
+			case BLACK: return RED;
+			}
+			return null;
+		}
+		
+		boolean isRed() { return this == RED; }
+		boolean isBlack() { return this == BLACK; }
 	}
 
 	/**
@@ -55,6 +68,119 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 		Node(K key, V value) { this(key, value, Color.RED, SENTINEL, SENTINEL); }
 	}
 
+	// Корень дерева.
+	final Node SENTINEL = new Node(null, null, Color.BLACK, null, null);
+	Node root = SENTINEL;
+
+	/**
+	 * Поиск в дереве по ключу.
+	 * @param key ключ поиска.
+	 * @return найденное значение или null, если такого ключа нет в дереве.
+	 */
+	public V get(K key) {
+		// Проверка: ключ поиска не должен быть пустым.
+		if (key == null) throw new NullPointerException("null key");
+
+		return get(key, root);
+	}
+	
+	/**
+	 * Добавление в дерево новой ассоциативной пары.
+	 * @param key ключ.
+	 * @param value значение.
+	 * @return значение, которое было ассоциировано раньше с этим ключом
+	 *         (если такое значение было).
+	 */
+	public V put(K key, V value) {
+		// Проверка: ключ поиска не должен быть пустым.
+		if (key == null) throw new NullPointerException("null key");
+
+		V oldValue = get(key);
+		root = put(key, value, root);
+		root.color = Color.BLACK;
+		return oldValue;
+	}
+	
+	private V get(K key, Node node) {
+		while (node != SENTINEL) {
+			int cmp = key.compareTo(node.key);
+			if (cmp < 0) node = node.left; else
+			if (cmp > 0) node = node.right; else
+			return node.value;
+		}
+		// Ключ не найден
+		return null;
+	}
+	
+	private Node put(K key, V value, Node node) {
+		if (node == SENTINEL) {
+			return new Node(key, value);
+		}
+		int cmp = key.compareTo(node.key);
+		if (cmp < 0) node.left = put(key, value, node.left);
+		else if (cmp > 0) node.right = put(key, value, node.right);
+		else node.value = value;
+		
+		// Проверяем сбалансированность и исправляем, если нужно.
+		if (node.left.color.isBlack() && node.right.color.isRed()) {
+			node = pivotLeft(node);
+		}
+		if (node.left.color.isRed() && node.left.left.color.isRed()) {
+			node = pivotRight(node);
+		}
+		if (node.left.color.isRed() && node.right.color.isRed()) {
+			node.color = Color.RED;
+			node.left.color = Color.BLACK;
+			node.right.color = Color.BLACK;
+		}
+		
+		return node;
+	}
+	
+	/**
+	 * Вытаскивает наверх правое поддерево узла при условии, что корень
+	 * этого правого поддерева - красный.
+	 * 
+	 * @param node	Узел - точка поворота
+	 * @return		Корень поддерева после поворота
+	 */
+	private Node pivotLeft(Node node) {
+		assert node != SENTINEL && node.right.color == Color.RED;
+		
+		// Перевешиваем ссылки
+		Node child = node.right;
+		node.right = child.left;
+		child.left = node;
+		
+		// Перекрашиваем узлы
+		child.color = node.color;
+		node.color = Color.RED;
+		
+		return child;
+	}
+	
+	/**
+	 * Вытаскивает наверх левое поддерево узла при условии, что корень
+	 * этого левого поддерева - красный.
+	 * 
+	 * @param node	Узел - точка поворота
+	 * @return		Корень поддерева после поворота
+	 */
+	private Node pivotRight(Node node) {
+		assert node != SENTINEL && node.left.color == Color.RED;
+		
+		// Перевешиваем сслки
+		Node child = node.left;
+		node.left = child.right;
+		child.right = node;
+		
+		// Перекрашиваем узлы
+		child.color = node.color;
+		node.color = Color.RED;
+		
+		return child;
+	}
+	
 	/**
 	 * Элемент списка пройденных узлов. Этот класс предназначен только
 	 * для внутренних целей, поэтому он private, и доступ
@@ -80,34 +206,6 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 		ListNode(E info, ListNode<E> next) {
 			this.info = info; this.next = next;
 		}
-	}
-
-	// Корень дерева.
-	final Node SENTINEL = new Node(null, null, Color.BLACK, null, null);
-	Node root = SENTINEL;
-
-	/**
-	 * Поиск в дереве по ключу.
-	 * @param key ключ поиска.
-	 * @return найденное значение или null, если такого ключа нет в дереве.
-	 */
-	public V get(K key) {
-		// Проверка: ключ поиска не должен быть пустым.
-		if (key == null) throw new NullPointerException("null key");
-
-		// Проход по дереву от корня до искомого узла.
-		Node current = root;
-		while (current != SENTINEL) {
-			if (key.compareTo(current.key) == 0) {
-				return current.value;
-			} else if (key.compareTo(current.key) < 0) {
-				current = current.left;
-			} else {
-				current = current.right;
-			}
-		}
-		// Ключ не найден.
-		return null;
 	}
 
 	/**
@@ -139,95 +237,88 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 		}
 	}
 
-	/**
-	 * Добавление в дерево новой ассоциативной пары.
-	 * @param key ключ.
-	 * @param value значение.
-	 * @return значение, которое было ассоциировано раньше с этим ключом
-	 *         (если такое значение было).
-	 */
-	public V put(K key, V value) {
-		// Проверка: ключ не может быть пустым.
-		if (key == null) throw new IllegalArgumentException("null key");
-
-		// 1. Поиск (почти как в методе get, только с запоминанием пройденного пути).
-		ListNode<Node> path = null;
-		Node current = root;
-		boolean stepLeft = true;
-		while (current != SENTINEL) {
-			if (key.compareTo(current.key) == 0) {
-				// Ключ найден; заменяем старое значение и заканчиваем работу.
-				V oldValue = current.value;
-				current.value = value;
-				return oldValue;
-			} else if (key.compareTo(current.key) < 0) {
-				path = new ListNode<Node>(current, path);
-				stepLeft = true;
-				current = current.left;
-			} else {
-				path = new ListNode<Node>(current, path);
-				stepLeft = false;
-				current = current.right;
-			}
-		}
-
-		// 2. Вставляем новый (красный) узел в дерево.
-		Node newNode = new Node(key, value);
-		if (path == null) {
-			root = newNode;
-			newNode.color = Color.BLACK;
-			return null;
-		} else if (stepLeft) {
-			path.info.left = newNode;
-		} else {
-			path.info.right = newNode;
-		}
-
-		// 3. Проходим вверх по дереву и проверяем цвета узлов.
-		//    Три последовательных элемента пути - p1 (красный), p2 и path.
-		ListNode<Node> p1 = new ListNode<Node>(newNode, path);
-		ListNode<Node> p2 = path;
-		path = path.next;
-		while (p2.info.color == Color.RED) {
-			if (path == null) {
-				// Добрались до корня дерева
-				p2.info.color = Color.BLACK;
-			} else {
-				Node uncle = path.info.left == p2.info ? path.info.right : path.info.left;
-				if (uncle.color == Color.BLACK) {
-					// Случай "черного дяди"
-					if (p2.info.left == p1.info && path.info.left == p2.info ||
-						p2.info.right == p1.info && path.info.right == p2.info) {
-						// простой поворот
-						pivot(p2, path, path.next);
-						p2.info.color = Color.BLACK;
-					} else {
-						// двойной поворот
-						pivot(p1, p2, path);
-						pivot(p1, path, path.next);
-						p1.info.color = Color.BLACK;
-					}
-					path.info.color = Color.RED;
-					break;
-				} else {
-					// Случай "красного дяди"
-					uncle.color = Color.BLACK;
-					p2.info.color = Color.BLACK;
-					path.info.color = Color.RED;
-					p1 = path;
-					p2 = path.next;
-					if (p2 == null) {
-						// Добрались до корня
-						p1.info.color = Color.BLACK;
-						break;
-					} else {
-						path = p2.next;
-					}
-				}
-			}
-		}
-		return null;
-	}
+//	public V put(K key, V value) {
+//		// Проверка: ключ не может быть пустым.
+//		if (key == null) throw new IllegalArgumentException("null key");
+//
+//		// 1. Поиск (почти как в методе get, только с запоминанием пройденного пути).
+//		ListNode<Node> path = null;
+//		Node current = root;
+//		boolean stepLeft = true;
+//		while (current != SENTINEL) {
+//			if (key.compareTo(current.key) == 0) {
+//				// Ключ найден; заменяем старое значение и заканчиваем работу.
+//				V oldValue = current.value;
+//				current.value = value;
+//				return oldValue;
+//			} else if (key.compareTo(current.key) < 0) {
+//				path = new ListNode<Node>(current, path);
+//				stepLeft = true;
+//				current = current.left;
+//			} else {
+//				path = new ListNode<Node>(current, path);
+//				stepLeft = false;
+//				current = current.right;
+//			}
+//		}
+//
+//		// 2. Вставляем новый (красный) узел в дерево.
+//		Node newNode = new Node(key, value);
+//		if (path == null) {
+//			root = newNode;
+//			newNode.color = Color.BLACK;
+//			return null;
+//		} else if (stepLeft) {
+//			path.info.left = newNode;
+//		} else {
+//			path.info.right = newNode;
+//		}
+//
+//		// 3. Проходим вверх по дереву и проверяем цвета узлов.
+//		//    Три последовательных элемента пути - p1 (красный), p2 и path.
+//		ListNode<Node> p1 = new ListNode<Node>(newNode, path);
+//		ListNode<Node> p2 = path;
+//		path = path.next;
+//		while (p2.info.color == Color.RED) {
+//			if (path == null) {
+//				// Добрались до корня дерева
+//				p2.info.color = Color.BLACK;
+//			} else {
+//				Node uncle = path.info.left == p2.info ? path.info.right : path.info.left;
+//				if (uncle.color == Color.BLACK) {
+//					// Случай "черного дяди"
+//					if (p2.info.left == p1.info && path.info.left == p2.info ||
+//						p2.info.right == p1.info && path.info.right == p2.info) {
+//						// простой поворот
+//						pivot(p2, path, path.next);
+//						p2.info.color = Color.BLACK;
+//					} else {
+//						// двойной поворот
+//						pivot(p1, p2, path);
+//						pivot(p1, path, path.next);
+//						p1.info.color = Color.BLACK;
+//					}
+//					path.info.color = Color.RED;
+//					break;
+//				} else {
+//					// Случай "красного дяди"
+//					uncle.color = Color.BLACK;
+//					p2.info.color = Color.BLACK;
+//					path.info.color = Color.RED;
+//					p1 = path;
+//					p2 = path.next;
+//					if (p2 == null) {
+//						// Добрались до корня
+//						p1.info.color = Color.BLACK;
+//						break;
+//					} else {
+//						path = p2.next;
+//					}
+//				}
+//			}
+//		}
+//		return null;
+//	}
 	
 	public V remove(K key) {
 		// Проверка: ключ не может быть пустым.
@@ -362,13 +453,18 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	 */
 	public static void main(String[] args) {
 		RedBlackTree<Integer, Integer> tree = new RedBlackTree<Integer, Integer>();
-		for (int i = 1; i <= 10; i++) {
-			tree.put(2*i, 2*i);
-		}
-		tree.put(15, 15);
-		for (int i = 1; i <= 10; i++) {
-			tree.remove(2*i);
+		int[] keys = { 5, 7, 9, 1, 11, 8, 15, 13, 3, 10 };
+		for (int key : keys) {
+			System.out.println("Added: <" + key + ", " + 2*key + ">");
+			tree.put(key, 2*key);
 			tree.print();
+			System.out.println("----------------------------");
+		}
+
+		for (int key : keys) {
+			System.out.println("Removed: " + tree.remove(key));
+			tree.print();
+			System.out.println("----------------------------");
 		}
 	}
 }
