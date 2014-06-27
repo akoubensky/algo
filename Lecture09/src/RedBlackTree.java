@@ -101,6 +101,20 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 		return oldValue;
 	}
 	
+	public V remove(K key) {
+		// Проверка: ключ поиска не должен быть пустым.
+		if (key == null) throw new NullPointerException("null key");
+
+		if (root == SENTINEL) return null;
+		V oldValue = get(key);
+		if (root.color.isBlack() && root.left.color.isBlack() && root.right.color.isBlack()) {
+			root.color = Color.RED;
+		}
+		root = remove(key, root);
+		root.color = Color.BLACK;
+		return oldValue;
+	}
+	
 	private V get(K key, Node node) {
 		while (node != SENTINEL) {
 			int cmp = key.compareTo(node.key);
@@ -121,22 +135,69 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 		else if (cmp > 0) node.right = put(key, value, node.right);
 		else node.value = value;
 		
-		// Проверяем сбалансированность и исправляем, если нужно.
-		if (node.left.color.isBlack() && node.right.color.isRed()) {
-			node = pivotLeft(node);
-		}
-		if (node.left.color.isRed() && node.left.left.color.isRed()) {
-			node = pivotRight(node);
-		}
-		if (node.left.color.isRed() && node.right.color.isRed()) {
-			node.color = Color.RED;
-			node.left.color = Color.BLACK;
-			node.right.color = Color.BLACK;
-		}
-		
-		return node;
+		return balance(node);
 	}
 	
+	private Node remove(K key, Node node) {
+        if (key.compareTo(node.key) < 0)  {
+            if (node.left.color.isBlack() && node.left.left.color.isBlack()) {
+            	node = moveRedLeft(node);
+            }
+            node.left = remove(key, node.left);
+        } else {
+            if (node.left.color.isRed()) {
+            	node = pivotRight(node);
+            }
+            if (key.compareTo(node.key) == 0 && (node.right == SENTINEL)) {
+                return SENTINEL;
+            }
+            if (node.right.color.isBlack() && node.right.left.color.isBlack()) {
+                node = moveRedRight(node);
+            }
+            if (key.compareTo(node.key) == 0) {
+            	Node subst = node.right;
+            	while (subst.left != SENTINEL) {
+            		subst = subst.left;
+            	}
+                node.key = subst.key;
+                node.value = subst.value;
+                node.right = deleteMin(node.right);
+            } else {
+            	node.right = remove(key, node.right);
+            }
+        }
+        return balance(node);
+	}
+	
+    // delete the key-value pair with the minimum key rooted at h
+    private Node deleteMin(Node node) { 
+        if (node.left == SENTINEL)
+            return SENTINEL;
+
+        if (node.left.color.isBlack() && node.left.left.color.isBlack())
+            node = moveRedLeft(node);
+
+        node.left = deleteMin(node.left);
+        return balance(node);
+    }
+
+    // restore red-black tree invariant
+    private Node balance(Node node) {
+        // assert (h != null);
+
+        if (node.right.color.isRed()) {
+        	node = pivotLeft(node);
+        }
+        if (node.left.color.isRed() && node.left.left.color.isRed()) {
+        	node = pivotRight(node);
+        }
+        if (node.left.color.isRed() && node.right.color.isRed()) {
+        	flipColors(node);
+        }
+
+        return node;
+    }
+
 	/**
 	 * Вытаскивает наверх правое поддерево узла при условии, что корень
 	 * этого правого поддерева - красный.
@@ -181,244 +242,42 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 		return child;
 	}
 	
-	/**
-	 * Элемент списка пройденных узлов. Этот класс предназначен только
-	 * для внутренних целей, поэтому он private, и доступ
-	 * к полям объектов этого класса осуществляется непосредственно.
-	 * 
-	 * Элемент списка будет содержать ссылку на узел дерева и направление
-	 * прохождения этого узла при поиске места для нового элемента.
-	 *
-	 * @param <E> тип элементов списка
-	 */
-	private static class ListNode<E> {
-		// Значение элемента списка:
-		E info;
-		// Ссылка на следующий элемент списка:
-		ListNode<E> next;
+    // flip the colors of a node and its two children
+    private void flipColors(Node node) {
+        // h must have opposite color of its two children
+        // assert (h != null) && (h.left != null) && (h.right != null);
+        // assert (!isRed(h) &&  isRed(h.left) &&  isRed(h.right))
+        //     || (isRed(h)  && !isRed(h.left) && !isRed(h.right));
+        node.color = node.color.flip();
+        node.left.color = node.left.color.flip();
+        node.right.color = node.right.color.flip();
+    }
 
-		/**
-		 * Конструктор элемента списка.
-		 * @param info элемент.
-		 * @param d направление.
-		 * @param next ссылка на следующий элемент списка.
-		 */
-		ListNode(E info, ListNode<E> next) {
-			this.info = info; this.next = next;
-		}
-	}
+    // Assuming that h is red and both h.left and h.left.left
+    // are black, make h.left or one of its children red.
+    private Node moveRedLeft(Node node) {
+        // assert (h != null);
+        // assert isRed(h) && !isRed(h.left) && !isRed(h.left.left);
 
-	/**
-	 * Функция поворота меняет местами два узла дерева: p1 и p2
-	 * (p1 поднимается наверх, p2 опускается вниз).
-	 * @param p1 нижний узел пары узлов.
-	 * @param p2 верхний узел пары узлов.
-	 * @param p3 предок узла p2 (может отсутствовать).
-	 */
-	private void pivot(ListNode<Node> p1,
-			ListNode<Node> p2,
-			ListNode<Node> p3) {
-		// 1. Перевешиваем узел p1 наверх
-		if (p3 == null) {
-			root = p1.info;
-		} else if (p3.info.left == p2.info) {
-			p3.info.left = p1.info;
-		} else {
-			p3.info.right = p1.info;
-		}
+        flipColors(node);
+        if (node.right.left.color.isRed()) { 
+            node.right = pivotRight(node.right);
+            node = pivotLeft(node);
+        }
+        return node;
+    }
 
-		// Изменяем остальные ссылки.
-		if (p2.info.left == p1.info) {
-			p2.info.left = p1.info.right;
-			p1.info.right = p2.info;
-		} else {
-			p2.info.right = p1.info.left;
-			p1.info.left = p2.info;
-		}
-	}
-
-//	public V put(K key, V value) {
-//		// Проверка: ключ не может быть пустым.
-//		if (key == null) throw new IllegalArgumentException("null key");
-//
-//		// 1. Поиск (почти как в методе get, только с запоминанием пройденного пути).
-//		ListNode<Node> path = null;
-//		Node current = root;
-//		boolean stepLeft = true;
-//		while (current != SENTINEL) {
-//			if (key.compareTo(current.key) == 0) {
-//				// Ключ найден; заменяем старое значение и заканчиваем работу.
-//				V oldValue = current.value;
-//				current.value = value;
-//				return oldValue;
-//			} else if (key.compareTo(current.key) < 0) {
-//				path = new ListNode<Node>(current, path);
-//				stepLeft = true;
-//				current = current.left;
-//			} else {
-//				path = new ListNode<Node>(current, path);
-//				stepLeft = false;
-//				current = current.right;
-//			}
-//		}
-//
-//		// 2. Вставляем новый (красный) узел в дерево.
-//		Node newNode = new Node(key, value);
-//		if (path == null) {
-//			root = newNode;
-//			newNode.color = Color.BLACK;
-//			return null;
-//		} else if (stepLeft) {
-//			path.info.left = newNode;
-//		} else {
-//			path.info.right = newNode;
-//		}
-//
-//		// 3. Проходим вверх по дереву и проверяем цвета узлов.
-//		//    Три последовательных элемента пути - p1 (красный), p2 и path.
-//		ListNode<Node> p1 = new ListNode<Node>(newNode, path);
-//		ListNode<Node> p2 = path;
-//		path = path.next;
-//		while (p2.info.color == Color.RED) {
-//			if (path == null) {
-//				// Добрались до корня дерева
-//				p2.info.color = Color.BLACK;
-//			} else {
-//				Node uncle = path.info.left == p2.info ? path.info.right : path.info.left;
-//				if (uncle.color == Color.BLACK) {
-//					// Случай "черного дяди"
-//					if (p2.info.left == p1.info && path.info.left == p2.info ||
-//						p2.info.right == p1.info && path.info.right == p2.info) {
-//						// простой поворот
-//						pivot(p2, path, path.next);
-//						p2.info.color = Color.BLACK;
-//					} else {
-//						// двойной поворот
-//						pivot(p1, p2, path);
-//						pivot(p1, path, path.next);
-//						p1.info.color = Color.BLACK;
-//					}
-//					path.info.color = Color.RED;
-//					break;
-//				} else {
-//					// Случай "красного дяди"
-//					uncle.color = Color.BLACK;
-//					p2.info.color = Color.BLACK;
-//					path.info.color = Color.RED;
-//					p1 = path;
-//					p2 = path.next;
-//					if (p2 == null) {
-//						// Добрались до корня
-//						p1.info.color = Color.BLACK;
-//						break;
-//					} else {
-//						path = p2.next;
-//					}
-//				}
-//			}
-//		}
-//		return null;
-//	}
-	
-	public V remove(K key) {
-		// Проверка: ключ не может быть пустым.
-		if (key == null) throw new NullPointerException("null key");
-
-		// 1. Поиск (почти как в методе get, только с запоминанием пройденного пути).
-		ListNode<Node> path = null;
-		Node current = root;
-		while (current != SENTINEL) {
-			if (key.compareTo(current.key) == 0) {
-				// Ключ найден; выходим из цикла.
-				break;
-			} else if (key.compareTo(current.key) < 0) {
-				path = new ListNode<Node>(current, path);
-				current = current.left;
-			} else {
-				path = new ListNode<Node>(current, path);
-				current = current.right;
-			}
-		}
-
-		if (current == SENTINEL) return null;
-
-		V oldValue = current.value;
-
-		// 2. Производим удаление ключа
-		if (current.left != SENTINEL && current.right != SENTINEL) {
-			Node safe = current;
-			path = new ListNode<Node>(current, path);
-			current = current.right;
-			while (current.left != SENTINEL) {
-				path = new ListNode<Node>(current, path);
-				current = current.left;
-			}
-			safe.key = current.key;
-			safe.value = current.value;
-		}
-
-		Node subst = (current.left == SENTINEL ? current.right : current.left);
-		if (path == null) {
-			root = subst;
-			root.color = Color.BLACK;
-			return oldValue;
-		}
-		if (path.info.right == current) {
-			path.info.right = subst;
-		} else {
-			path.info.left = subst;
-		}
-		
-		// 3. Производим балансировку
-		if (current.color == Color.RED) {
-			// Удаленный узел - красный, коррекция не нужна
-		} else if (subst.color == Color.RED) {
-			// Коррекция состоит в простом перекрашивании узла
-			subst.color = Color.BLACK;
-		} else {
-			current = subst;
-			while (current != null) {
-				if (path == null) {
-					// Дошли до корня
-					break;
-				}
-				Node brother = path.info.left == current ? path.info.right : path.info.left;
-				ListNode<Node> listBrother = new ListNode<Node>(brother, path);
-				if (brother.color == Color.RED) {
-					pivot(listBrother, path, path.next);
-					brother.color = Color.BLACK;
-					path.info.color = Color.RED;
-					listBrother.next = path.next;
-					path.next = listBrother;
-				} else if (brother.left.color == Color.BLACK && brother.right.color == Color.BLACK) {
-					brother.color = Color.RED;
-					if (path.info.color == Color.RED) {
-						path.info.color = Color.BLACK;
-						break;
-					} else {
-						current = path.info;
-						path = path.next;
-					}
-				} else {
-					Node nephew = path.info.right == brother ? brother.right : brother.left;
-					if (nephew.color == Color.RED) {
-						pivot(listBrother, path, path.next);
-						nephew.color = Color.BLACK;
-						brother.color = path.info.color;
-						path.info.color = Color.BLACK;
-						break;
-					} else {
-						ListNode<Node> listNephew = new ListNode<Node>(nephew, listBrother);
-						pivot(listNephew, listBrother, path);
-						brother.color = Color.RED;
-						nephew.color = Color.BLACK;
-					}
-				}
-			}
-		}
-
-		return oldValue;
-	}
+    // Assuming that h is red and both h.right and h.right.left
+    // are black, make h.right or one of its children red.
+    private Node moveRedRight(Node node) {
+        // assert (h != null);
+        // assert isRed(h) && !isRed(h.right) && !isRed(h.right.left);
+        flipColors(node);
+        if (node.left.left.color.isRed()) { 
+            node = pivotRight(node);
+        }
+        return node;
+    }
 
 	/**
 	 * "Красивая" печать дерева.
