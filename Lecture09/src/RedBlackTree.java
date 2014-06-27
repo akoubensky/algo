@@ -17,7 +17,7 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	/**
 	 * Цвет узлов дерева
 	 */
-	private enum Color {
+	private static enum Color {
 		RED, BLACK;
 		
 		Color flip() {
