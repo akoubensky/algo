@@ -4,6 +4,8 @@ import java.util.Arrays;
 /**
  * Реализация основной операции красно-черного дерева -
  * операции вставки новой ассоциативной пары <ключ, значение>.
+ * В данных алгоритмах красный узел всегда располагается слева от черного, что позволяет
+ * считать данное красно-черное дерево частным случаем 2-3-дерева.
  * 
  * (c) http://algs4.cs.princeton.edu/33balanced/RedBlackBST.java.html
  *
@@ -160,7 +162,7 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 		// После вставки может оказаться нарушенной балансировка дерева - 
 		// у красного узла может образоваться красный потомок.
 		
-		// 1. Если красный узел справа, то перевешиваем его так, стобы красный узел был слева;
+		// 1. Если красный узел справа, то перевешиваем его так, чтобы красный узел был слева;
 		//    корень становится черным.
         if (isRed(node.right) && isBlack(node.left)) {
         	node = pivotLeft(node);
@@ -168,31 +170,49 @@ public class RedBlackTree<K extends Comparable<K>, V> {
         
         // 2. Если есть два рядом расположенных красных узла, то делаем обратный поворот,
         //    чтобы оба красных узла были потомками узла node.
-        if (isRed(node.left)  && isRed(node.left.left)) node = pivotRight(node);
+        if (isRed(node.left)  && isRed(node.left.left)) {
+        	node = pivotRight(node);
+        }
         
         // 3. Если теперь оба потомка красные, то продвигаем красноту наверх, перекрашивая узлы.
-        if (isRed(node.left)  && isRed(node.right))     flipColors(node);
+        if (isRed(node.left)  && isRed(node.right)) {
+        	flipColors(node);
+        }
         
         return node;
 	}
 	
+	/**
+	 * Удаляет узел с заданным ключом из заданного поддерева в предположении, что либо корень поддерева,
+	 * либо его левый потомок - красные.
+	 * @param key	Заданный ключ
+	 * @param node	Корень заданного поддерева
+	 * @return		Модифицированное поддерево
+	 */
 	private Node remove(K key, Node node) {
         if (key.compareTo(node.key) < 0)  {
+        	// Удаляем из левого поддерева
             if (isBlack(node.left) && isBlack(node.left.left)) {
+            	// Узел красный, продвигаем красный цвет к левому потомку
             	node = moveRedLeft(node);
             }
             node.left = remove(key, node.left);
         } else {
+        	// Удаляем из правого поддерева
             if (isRed(node.left)) {
+            	// Корень был черным, делаем его красным
             	node = pivotRight(node);
             }
             if (key.compareTo(node.key) == 0 && (node.right == SENTINEL)) {
+            	// Удаляется сам корень поддерева
                 return SENTINEL;
             }
             if (isBlack(node.right) && isBlack(node.right.left)) {
+            	// Продвигаем красный цвет к правому потомку
                 node = moveRedRight(node);
             }
             if (key.compareTo(node.key) == 0) {
+            	// Надо удалить корень. Вместо этого удаляем минимальный узел из правого поддерева
             	Node subst = node.right;
             	while (subst.left != SENTINEL) {
             		subst = subst.left;
@@ -204,17 +224,32 @@ public class RedBlackTree<K extends Comparable<K>, V> {
             	node.right = remove(key, node.right);
             }
         }
+        // После удаления у красного узла может образоваться красный потомок. Исправляем.
         return balance(node);
 	}
 	
+	/**
+	 * Проверяет, действительно ли заданный узел - красный
+	 * @param node	Проверяемый узел
+	 * @return		true, если узел красный, false - если черный
+	 */
 	private boolean isRed(Node node) {
 		return node.color == Color.RED;
 	}
 	
+	/**
+	 * Проверяет, действительно ли заданный узел - черный
+	 * @param node	Проверяемый узел
+	 * @return		true, если узел черный, false - если красный
+	 */
 	private boolean isBlack(Node node) {
 		return node.color == Color.BLACK;
 	}
 	
+	/**
+	 * Меняет цвет заданного узла на противоположный
+	 * @param node	Заданный узел
+	 */
 	private void flipColor(Node node) {
 		switch (node.color) {
 		case RED: node.color = Color.BLACK; break;
@@ -222,21 +257,31 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 		}
 	}
 	
-    // delete the key-value pair with the minimum key rooted at h
+    /**
+     * Удаляет узел с минимальным ключом из поддерева с заданным корнем.
+     * @param node	Корень поддерева
+     * @return		Поддерево после удаления узла
+     */
     private Node deleteMin(Node node) { 
-        if (node.left == SENTINEL)
+        if (node.left == SENTINEL) {
             return SENTINEL;
+        }
 
-        if (isBlack(node.left) && isBlack(node.left.left))
+        if (isBlack(node.left) && isBlack(node.left.left)) {
             node = moveRedLeft(node);
+        }
 
         node.left = deleteMin(node.left);
         return balance(node);
     }
 
-    // restore red-black tree invariant
+    /**
+     * Восстанавливает красно-черный баланс узла.
+     * @param node	Узел
+     * @return		Поддерево после балансировки
+     */
     private Node balance(Node node) {
-        // assert (h != null);
+    	assert node != SENTINEL;
 
         if (isRed(node.right)) {
         	node = pivotLeft(node);
@@ -310,11 +355,15 @@ public class RedBlackTree<K extends Comparable<K>, V> {
         flipColor(node.right);
     }
 
-    // Assuming that h is red and both h.left and h.left.left
-    // are black, make h.left or one of its children red.
+    /**
+     * Смещает красный цвет от заданного узла к левому потомку в предположении,
+     * что этот левый потомок и его левый потомок - оба черные.
+     * @param node	Красный узел
+     * @return		Корень поддерева после перекрашивания
+     */
     private Node moveRedLeft(Node node) {
-        // assert (h != null);
-        // assert isRed(h) && !isRed(h.left) && !isRed(h.left.left);
+        assert node != SENTINEL;
+        assert isRed(node) && isBlack(node.left) && isBlack(node.left.left);
 
         flipColors(node);
         if (isRed(node.right.left)) { 
@@ -324,11 +373,16 @@ public class RedBlackTree<K extends Comparable<K>, V> {
         return node;
     }
 
-    // Assuming that h is red and both h.right and h.right.left
-    // are black, make h.right or one of its children red.
+    /**
+     * Смещает красный цвет от заданного узла к правому потомку в предположении,
+     * что этот правый потомок и его левый потомок - оба черные.
+     * @param node	Красный узел
+     * @return		Корень поддерева после перекрашивания
+     */
     private Node moveRedRight(Node node) {
-        // assert (h != null);
-        // assert isRed(h) && !isRed(h.right) && !isRed(h.right.left);
+        assert node != SENTINEL;
+        assert isRed(node) && isBlack(node.right) && isBlack(node.right.left);
+
         flipColors(node);
         if (isRed(node.left.left)) { 
             node = pivotRight(node);
