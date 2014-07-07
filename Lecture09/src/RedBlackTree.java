@@ -1,5 +1,3 @@
-import java.util.Arrays;
-
 
 /**
  * Реализация основной операции красно-черного дерева -
@@ -12,7 +10,7 @@ import java.util.Arrays;
  * @param <K> тип ключа
  * @param <V> тип значения
  */
-public class RedBlackTree<K extends Comparable<K>, V> {
+public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 	/**
 	 * Цвет узлов дерева
 	 */
@@ -25,13 +23,7 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	 * для внутренних целей, поэтому он private, и доступ к полям объектов
 	 * этого класса осуществляется непосредственно.
 	 */
-	private class Node {
-		// Ссылки на левое и правое поддеревья:
-		Node left, right;
-		// Ключ:
-		K key;
-		// Значение:
-		V value;
+	protected class Node extends BSNode {
 		// Цвет узла:
 		Color color;
 
@@ -44,8 +36,11 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 		 * @param right правое поддерево
 		 */
 		Node(K key, V value, Color color, Node left, Node right) {
-			this.key = key; this.value = value; this.color = color;
-			this.left = left; this.right = right;
+			super(key, value, left, right);
+			assert (left == null || left instanceof RedBlackTree.Node) &&
+				   (right == null || right instanceof RedBlackTree.Node);
+
+			this.color = color;
 		}
 
 		/**
@@ -53,25 +48,25 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 		 * @param key ключ
 		 * @param value значение
 		 */
-		Node(K key, V value) { this(key, value, Color.RED, SENTINEL, SENTINEL); }
-	}
-
-	// Корень дерева.
-	final Node SENTINEL = new Node(null, null, Color.BLACK, null, null);
-	Node root = SENTINEL;
-
-	/**
-	 * Поиск в дереве по ключу.
-	 * @param key ключ поиска.
-	 * @return найденное значение или null, если такого ключа нет в дереве.
-	 */
-	public V get(K key) {
-		// Проверка: ключ поиска не должен быть пустым.
-		if (key == null) throw new NullPointerException("null key");
-
-		return get(key, root);
+		Node(K key, V value) { this(key, value, Color.RED, null, null); }
+		
+		@Override
+		public String toString() {
+			return color.toString() + " " + super.toString();
+		}
 	}
 	
+	/**
+	 * Вспомогательный класс, представляющий найденное старое значение
+	 * при вставках и удалениях.
+	 */
+	private class FoundValue {
+		// Найденный ключ (используется при удалении минимального элемента)
+		K key;
+		// Найденное значение (сначала - null)
+		V value;
+	}
+
 	/**
 	 * Добавление в дерево новой ассоциативной пары.
 	 * @param key	Ключ.
@@ -79,16 +74,21 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	 * @return		Значение, которое было ассоциировано раньше с этим ключом
 	 *         (если такое значение было).
 	 */
+	@SuppressWarnings("unchecked")
 	public V put(K key, V value) {
+		assert root == null || root instanceof RedBlackTree.Node;
+		
 		// Проверка: ключ поиска не должен быть пустым.
 		if (key == null) throw new NullPointerException("null key");
 
-		// Сначала ищем старое значение
-		V oldValue = get(key);
-		root = put(key, value, root);
+		// Заготовим объект, в который можно записать старое значение
+		FoundValue found = new FoundValue();
+		// Выполняем вставку с запоминанием старого значения
+		root = put(key, value, (Node)root, found);
 		// После вставки корень дерева может оказаться красным - перекрасим его.
-		root.color = Color.BLACK;
-		return oldValue;
+		((Node)root).color = Color.BLACK;
+		// Возвращаем старое значение
+		return found.value;
 	}
 	
 	/**
@@ -96,47 +96,33 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	 * @param key	Ключ поиска (не равен null)
 	 * @return		Удаленное значение (или null, если такого ключа не было в дереве)
 	 */
+	@SuppressWarnings("unchecked")
 	public V remove(K key) {
 		// Проверка: ключ поиска не должен быть пустым.
 		if (key == null) throw new NullPointerException("null key");
 
 		// Пустое дерево - специальный случай.
-		if (root == SENTINEL) return null;
+		if (root == null) return null;
 		
-		// Сначала ищем старое значение
-		V oldValue = get(key);
+		// Заготовим объект, в который можно записать старое значение
+		FoundValue found = new FoundValue();
 		
 		// Если корень дерева и оба его непосредственных потомка - черные, то временно
 		// сделаем корень красным
-		if (isBlack(root) && isBlack(root.left) && isBlack(root.right)) {
-			root.color = Color.RED;
+		if (isBlack((Node)root.left) && isBlack((Node)root.right)) {
+			((Node)root).color = Color.RED;
 		}
-		root = remove(key, root);
+		// Выполняем удаление с запоминанием старого значения
+		root = remove(key, (Node)root, found);
 		// После удаления корень дерева может оказаться красным - перекрасим его.
-		root.color = Color.BLACK;
-		return oldValue;
+		if (isRed((Node)root)) ((Node)root).color = Color.BLACK;
+		// Возвращаем старое значение
+		return found.value;
 	}
 	
 	//----------------------------------------------------------------------------------
 	// Вспомогательные рекурсивные функции
 	//----------------------------------------------------------------------------------
-	
-	/**
-	 * Стандартный двоичный поиск в дереве по ключу
-	 * @param key	Ключ поиска
-	 * @param node	Начальный корень
-	 * @return
-	 */
-	private V get(K key, Node node) {
-		while (node != SENTINEL) {
-			int cmp = key.compareTo(node.key);
-			if (cmp < 0) node = node.left; else
-			if (cmp > 0) node = node.right; else
-			return node.value;
-		}
-		// Ключ не найден
-		return null;
-	}
 	
 	/**
 	 * Вставка в дерево новой ассоциативной пары.
@@ -145,37 +131,38 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	 * @param node
 	 * @return
 	 */
-	private Node put(K key, V value, Node node) {
-		if (node == SENTINEL) {
+	@SuppressWarnings("unchecked")
+	private Node put(K key, V value, Node node, FoundValue found) {
+		if (node == null) {
 			// Новый вставляемый узел всегда красный - это не нарушает баланс черных и красных узлов
 			return new Node(key, value);
 		}
 		int cmp = key.compareTo(node.key);
 		if (cmp < 0) {
-			node.left = put(key, value, node.left);
+			node.left = put(key, value, (Node)node.left, found);
 		} else if (cmp > 0) {
-			node.right = put(key, value, node.right);
+			node.right = put(key, value, (Node)node.right, found);
 		} else {
+			found.value = node.value;
 			node.value = value;
 		}
 		
 		// После вставки может оказаться нарушенной балансировка дерева - 
 		// у красного узла может образоваться красный потомок.
 		
-		// 1. Если красный узел справа, то перевешиваем его так, чтобы красный узел был слева;
-		//    корень становится черным.
-        if (isRed(node.right) && isBlack(node.left)) {
+		// 1. Если красный узел справа, то перевешиваем его так, чтобы красный узел был слева.
+        if (isRed((Node)node.right) && isBlack((Node)node.left)) {
         	node = pivotLeft(node);
         }
         
         // 2. Если есть два рядом расположенных красных узла, то делаем обратный поворот,
         //    чтобы оба красных узла были потомками узла node.
-        if (isRed(node.left)  && isRed(node.left.left)) {
+        if (isRed((Node)node.left)  && isRed((Node)node.left.left)) {
         	node = pivotRight(node);
         }
         
         // 3. Если теперь оба потомка красные, то продвигаем красноту наверх, перекрашивая узлы.
-        if (isRed(node.left)  && isRed(node.right)) {
+        if (isRed((Node)node.left)  && isRed((Node)node.right)) {
         	flipColors(node);
         }
         
@@ -183,45 +170,45 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	}
 	
 	/**
-	 * Удаляет узел с заданным ключом из заданного поддерева в предположении, что либо корень поддерева,
-	 * либо его левый потомок - красные.
+	 * Удаляет узел с заданным ключом из заданного поддерева в предположении,
+	 * что либо корень поддерева, либо его левый потомок - красные.
 	 * @param key	Заданный ключ
 	 * @param node	Корень заданного поддерева
 	 * @return		Модифицированное поддерево
 	 */
-	private Node remove(K key, Node node) {
+	@SuppressWarnings("unchecked")
+	private Node remove(K key, Node node, FoundValue found) {
         if (key.compareTo(node.key) < 0)  {
         	// Удаляем из левого поддерева
-            if (isBlack(node.left) && isBlack(node.left.left)) {
+            if (isBlack((Node)node.left) && isBlack((Node)node.left.left)) {
             	// Узел красный, продвигаем красный цвет к левому потомку
             	node = moveRedLeft(node);
             }
-            node.left = remove(key, node.left);
+            node.left = remove(key, (Node)node.left, found);
         } else {
-        	// Удаляем из правого поддерева
-            if (isRed(node.left)) {
-            	// Корень был черным, делаем его красным
-            	node = pivotRight(node);
+        	// Удаляем из правого поддерева или корня
+            if (isRed((Node)node.left)) {
+            	// Делаем левый потомок черным
+            	node = pivotRight((Node)node);
             }
-            if (key.compareTo(node.key) == 0 && (node.right == SENTINEL)) {
-            	// Удаляется сам корень поддерева
-                return SENTINEL;
+            if (key.compareTo(node.key) == 0 && node.right == null) {
+            	// Удаляется корень поддерева, который заведомо является листом.
+            	found.value = node.value;
+                return null;
             }
-            if (isBlack(node.right) && isBlack(node.right.left)) {
+            if (isBlack((Node)node.right) && isBlack((Node)node.right.left)) {
             	// Продвигаем красный цвет к правому потомку
                 node = moveRedRight(node);
             }
             if (key.compareTo(node.key) == 0) {
+            	found.value = node.value;
             	// Надо удалить корень. Вместо этого удаляем минимальный узел из правого поддерева
-            	Node subst = node.right;
-            	while (subst.left != SENTINEL) {
-            		subst = subst.left;
-            	}
-                node.key = subst.key;
-                node.value = subst.value;
-                node.right = deleteMin(node.right);
+                FoundValue min = new FoundValue();
+                node.right = deleteMin((Node)node.right, min);
+                node.key = min.key;
+                node.value = min.value;
             } else {
-            	node.right = remove(key, node.right);
+            	node.right = remove(key, (Node)node.right, found);
             }
         }
         // После удаления у красного узла может образоваться красный потомок. Исправляем.
@@ -234,7 +221,7 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	 * @return		true, если узел красный, false - если черный
 	 */
 	private boolean isRed(Node node) {
-		return node.color == Color.RED;
+		return node != null && node.color == Color.RED;
 	}
 	
 	/**
@@ -243,7 +230,7 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	 * @return		true, если узел черный, false - если красный
 	 */
 	private boolean isBlack(Node node) {
-		return node.color == Color.BLACK;
+		return node == null || node.color == Color.BLACK;
 	}
 	
 	/**
@@ -251,6 +238,8 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	 * @param node	Заданный узел
 	 */
 	private void flipColor(Node node) {
+		assert node != null;
+		
 		switch (node.color) {
 		case RED: node.color = Color.BLACK; break;
 		case BLACK: node.color = Color.RED; break;
@@ -262,16 +251,19 @@ public class RedBlackTree<K extends Comparable<K>, V> {
      * @param node	Корень поддерева
      * @return		Поддерево после удаления узла
      */
-    private Node deleteMin(Node node) { 
-        if (node.left == SENTINEL) {
-            return SENTINEL;
+    @SuppressWarnings("unchecked")
+	private Node deleteMin(Node node, FoundValue min) { 
+        if (node.left == null) {
+        	min.key = node.key;
+        	min.value = node.value;
+            return null;
         }
 
-        if (isBlack(node.left) && isBlack(node.left.left)) {
+        if (isBlack((Node)node.left) && isBlack((Node)node.left.left)) {
             node = moveRedLeft(node);
         }
 
-        node.left = deleteMin(node.left);
+        node.left = deleteMin((Node)node.left, min);
         return balance(node);
     }
 
@@ -280,16 +272,17 @@ public class RedBlackTree<K extends Comparable<K>, V> {
      * @param node	Узел
      * @return		Поддерево после балансировки
      */
-    private Node balance(Node node) {
-    	assert node != SENTINEL;
+    @SuppressWarnings("unchecked")
+	private Node balance(Node node) {
+    	assert node != null;
 
-        if (isRed(node.right)) {
+        if (isRed((Node)node.right)) {
         	node = pivotLeft(node);
         }
-        if (isRed(node.left) && isRed(node.left.left)) {
+        if (isRed((Node)node.left) && isRed((Node)node.left.left)) {
         	node = pivotRight(node);
         }
-        if (isRed(node.left) && isRed(node.right)) {
+        if (isRed((Node)node.left) && isRed((Node)node.right)) {
         	flipColors(node);
         }
 
@@ -303,11 +296,12 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	 * @param node	Узел - точка поворота
 	 * @return		Корень поддерева после поворота
 	 */
+	@SuppressWarnings("unchecked")
 	private Node pivotLeft(Node node) {
-		assert node != SENTINEL && isRed(node.right);
+		assert node != null && isRed((Node)node.right);
 		
 		// Перевешиваем ссылки
-		Node child = node.right;
+		Node child = (Node)node.right;
 		node.right = child.left;
 		child.left = node;
 		
@@ -325,11 +319,12 @@ public class RedBlackTree<K extends Comparable<K>, V> {
 	 * @param node	Узел - точка поворота
 	 * @return		Корень поддерева после поворота
 	 */
+	@SuppressWarnings("unchecked")
 	private Node pivotRight(Node node) {
-		assert node != SENTINEL && isRed(node.left);
+		assert node != null && isRed((Node)node.left);
 		
 		// Перевешиваем ссылки
-		Node child = node.left;
+		Node child = (Node)node.left;
 		node.left = child.right;
 		child.right = node;
 		
@@ -346,13 +341,15 @@ public class RedBlackTree<K extends Comparable<K>, V> {
      * что у заданного узла. 
      * @param node	Узел для перекрашивания
      */
-    private void flipColors(Node node) {
-        assert node != SENTINEL && node.left != SENTINEL && node.right != SENTINEL;
-        assert node.left.color == node.right.color && node.left.color != node.color;
+    @SuppressWarnings("unchecked")
+	private void flipColors(Node node) {
+        assert node != null && node.left != null && node.right != null;
+        assert ((Node)node.left).color == ((Node)node.right).color &&
+        		((Node)node.left).color != node.color;
 
         flipColor(node);
-        flipColor(node.left);
-        flipColor(node.right);
+        flipColor((Node)node.left);
+        flipColor((Node)node.right);
     }
 
     /**
@@ -361,13 +358,14 @@ public class RedBlackTree<K extends Comparable<K>, V> {
      * @param node	Красный узел
      * @return		Корень поддерева после перекрашивания
      */
-    private Node moveRedLeft(Node node) {
-        assert node != SENTINEL;
-        assert isRed(node) && isBlack(node.left) && isBlack(node.left.left);
+    @SuppressWarnings("unchecked")
+	private Node moveRedLeft(Node node) {
+        assert node != null;
+        assert isRed(node) && isBlack((Node)node.left) && isBlack((Node)node.left.left);
 
         flipColors(node);
-        if (isRed(node.right.left)) { 
-            node.right = pivotRight(node.right);
+        if (isRed((Node)node.right.left)) { 
+            node.right = pivotRight((Node)node.right);
             node = pivotLeft(node);
         }
         return node;
@@ -379,58 +377,43 @@ public class RedBlackTree<K extends Comparable<K>, V> {
      * @param node	Красный узел
      * @return		Корень поддерева после перекрашивания
      */
-    private Node moveRedRight(Node node) {
-        assert node != SENTINEL;
-        assert isRed(node) && isBlack(node.right) && isBlack(node.right.left);
+    @SuppressWarnings("unchecked")
+	private Node moveRedRight(Node node) {
+        assert node != null;
+        assert isRed(node) && isBlack((Node)node.right) && isBlack((Node)node.right.left);
 
         flipColors(node);
-        if (isRed(node.left.left)) { 
+        if (isRed((Node)node.left.left)) { 
             node = pivotRight(node);
         }
         return node;
     }
 
 	/**
-	 * "Красивая" печать дерева.
-	 */
-	public void print() {
-		print(root, 0);
-		System.out.println("--------------------");
-	}
-
-	/**
-	 * Вспомогательная функция для "красивой" печати дерева.
-	 * @param node корневой узел.
-	 * @param indent начальный отступ при печати.
-	 */
-	private void print(Node node, int indent) {
-		if (node != SENTINEL) {
-			// Формируем строку из indent пробелов.
-			char[] spaces = new char[indent];
-			Arrays.fill(spaces, ' ');
-			System.out.print(String.valueOf(spaces));
-
-			// Печать узла и его поддеревьев.
-			System.out.println(node.color + " <" + node.key + ", " + node.value + ">");
-			print(node.left, indent + 2);
-			print(node.right, indent + 2);
-		}
-	}
-
-	/**
 	 * Тестирующая функция создает АВЛ-дерево последовательной вставкой элементов.
+	 * После этого все элементы заменяются на новые, а потом последовательно
+	 * удаляются из дерева.
+	 * 
 	 * @param args не используется.
 	 */
 	public static void main(String[] args) {
 		RedBlackTree<Integer, Integer> tree = new RedBlackTree<Integer, Integer>();
-		int[] keys = { 5, 7, 9, 1, 11, 8, 15, 13, 3, 10 };
+		int[] keys = { 12, 7, 9, 1, 11, 8, 15, 13, 3, 10 };
+		
+		// Вставляем элементы в дерево
 		for (int key : keys) {
 			System.out.println("Added: <" + key + ", " + 2*key + ">");
 			tree.put(key, 2*key);
 			tree.print();
 			System.out.println("----------------------------");
 		}
+		
+		// Заменяем все элементы на новые
+		for (int key : keys) {
+			System.out.format("Replaced %d to %d%n", tree.put(key, key), key);
+		}
 
+		// Удаляем все элементы
 		for (int key : keys) {
 			System.out.println("Removed: " + tree.remove(key));
 			tree.print();
