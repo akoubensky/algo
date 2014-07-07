@@ -59,17 +59,6 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 	}
 	
 	/**
-	 * Вспомогательный класс, представляющий найденное старое значение
-	 * при вставках и удалениях.
-	 */
-	private class FoundValue {
-		// Найденный ключ (используется при удалении минимального элемента)
-		K key;
-		// Найденное значение (сначала - null)
-		V value;
-	}
-
-	/**
 	 * Добавление в дерево новой ассоциативной пары.
 	 * @param key	Ключ.
 	 * @param value Значение.
@@ -84,7 +73,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 		if (key == null) throw new NullPointerException("null key");
 
 		// Заготовим объект, в который можно записать старое значение
-		FoundValue found = new FoundValue();
+		BSNode found = new BSNode(null, null);
 		// Выполняем вставку с запоминанием старого значения
 		root = put(key, value, (Node)root, found);
 		// После вставки корень дерева может оказаться красным - перекрасим его.
@@ -107,7 +96,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 		if (root == null) return null;
 		
 		// Заготовим объект, в который можно записать старое значение
-		FoundValue found = new FoundValue();
+		BSNode found = new BSNode(null, null);
 		
 		// Если корень дерева и оба его непосредственных потомка - черные, то временно
 		// сделаем корень красным
@@ -134,7 +123,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	private Node put(K key, V value, Node node, FoundValue found) {
+	private Node put(K key, V value, Node node, BSNode found) {
 		if (node == null) {
 			// Новый вставляемый узел всегда красный - это не нарушает баланс черных и красных узлов
 			return new Node(key, value);
@@ -179,7 +168,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 	 * @return		Модифицированное поддерево
 	 */
 	@SuppressWarnings("unchecked")
-	private Node remove(K key, Node node, FoundValue found) {
+	private Node remove(K key, Node node, BSNode found) {
         if (key.compareTo(node.key) < 0)  {
         	// Удаляем из левого поддерева
             if (isBlack((Node)node.left) && isBlack((Node)node.left.left)) {
@@ -205,7 +194,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
             if (key.compareTo(node.key) == 0) {
             	found.value = node.value;
             	// Надо удалить корень. Вместо этого удаляем минимальный узел из правого поддерева
-                FoundValue min = new FoundValue();
+                BSNode min = new BSNode(null, null);
                 node.right = deleteMin((Node)node.right, min);
                 node.key = min.key;
                 node.value = min.value;
@@ -254,7 +243,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
      * @return		Поддерево после удаления узла
      */
     @SuppressWarnings("unchecked")
-	private Node deleteMin(Node node, FoundValue min) { 
+	private Node deleteMin(Node node, BSNode min) { 
         if (node.left == null) {
         	min.key = node.key;
         	min.value = node.value;
