@@ -46,252 +46,279 @@ public class AVLTreeB<K extends Comparable<K>, V> extends BSTree<K, V> {
 			super(key, value);
 			this.balance = 0;
 		}
-	}
-
-	/**
-	 * Значение направлений при прохождении вниз по дереву.
-	 */
-	private static enum Direction {
-		LEFT, RIGHT
-	}
-
-	/**
-	 * Элемент списка пройденных узлов. Этот класс предназначен только
-	 * для внутренних целей, поэтому он private, и доступ
-	 * к полям объектов этого класса осуществляется непосредственно.
-	 * 
-	 * Элемент списка будет содержать ссылку на узел дерева и направление
-	 * прохождения этого узла при поиске места для нового элемента.
-	 *
-	 * @param <E> тип элементов списка
-	 */
-	private static class ListNode<E> {
-		// Значение элемента списка:
-		E info;
-		// Направление прохождения узла:
-		Direction d;
-		// Ссылка на следующий элемент списка:
-		ListNode<E> next;
-
-		/**
-		 * Конструктор элемента списка.
-		 * @param info элемент.
-		 * @param d направление.
-		 * @param next ссылка на следующий элемент списка.
-		 */
-		ListNode(E info, Direction d, ListNode<E> next) {
-			this.info = info; this.d = d; this.next = next;
+		
+		@Override
+		public String toString() {
+			return super.toString() + " (" + balance + ")";
 		}
 	}
 
+	/**
+	 * Объект, возвращаемый рекурсивными функциями put и remove.
+	 */
+	private class RetValue {
+		Node node;			// Корень модифицированного дерева
+		boolean hChanged;	// Признак измененной высоты модифицированного дерева
+		K oldKey;			// Старое значение ключа в измененном узле
+		V oldValue;			// Старое значение в измененном узле (если узел был раньше)
+		
+		RetValue(Node node, boolean hChanged, K oldKey, V oldValue) {
+			this.node = node;
+			this.hChanged = hChanged;
+			this.oldKey = oldKey;
+			this.oldValue = oldValue;
+		}
+		
+		RetValue(Node node, boolean hChanged, V oldValue) {
+			this(node, hChanged, null, oldValue);
+		}
+	}
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public V put(K key, V value) {
-		// Проверка: ключ не может быть пустым.
-		if (key == null) throw new NullPointerException("null key");
-
-		// 1. Поиск (почти как в методе get, только с запоминанием пройденного пути).
-		ListNode<Node> path = null;
-		Node current = (Node)root;
-		while (current != null) {
-			if (key.compareTo(current.key) == 0) {
-				// Ключ найден; заменяем старое значение и заканчиваем работу.
-				V oldValue = current.value;
-				current.value = value;
-				return oldValue;
-			} else if (key.compareTo(current.key) < 0) {
-				path = new ListNode<Node>(current, Direction.LEFT, path);
-				current = (Node)current.left;
-			} else {
-				path = new ListNode<Node>(current, Direction.RIGHT, path);
-				current = (Node)current.right;
-			}
-		}
-
-		// 2. Вставляем новый узел в дерево.
-		Node newNode = new Node(key, value);
-		if (path == null) {
-			root = newNode;
-		} else if (path.d == Direction.LEFT) {
-			path.info.left = newNode;
-		} else {
-			path.info.right = newNode;
-		}
-
-		// 3. Проходим вверх по дереву и проверяем сбалансированность узлов.
-		//    Три последовательных элемента пути - pred1, pred и path.
-		ListNode<Node> pred = new ListNode<Node>(newNode, Direction.LEFT, path);
-		ListNode<Node> pred1 = null;
-		while (path != null) {
-			// Корректируем показатель сбалансированности. Если он ноль, то работа
-			// по балансировке дерева не нужна.
-			if (path.d == Direction.LEFT) {
-				if (++path.info.balance == 0) break;
-			} else {
-				if (--path.info.balance == 0) break;
-			}
-
-			if (Math.abs(path.info.balance) < 2) {
-				// Дерево пока сбалансировано, но требуется дальнейшая проверка.
-				pred1 = pred;
-				pred = path;
-				path = path.next;
-			} else {
-				// Обнаружен дисбаланс. Корректируем его простым или двойным вращением.
-				if (path.d == pred.d) {
-					pivot(pred, path, path.next);
-				} else {
-					pivot(pred1, pred, path);
-					pivot(pred1, path, path.next);
-				}
-				break;
-			}
-		}
-		return null;
+		RetValue retVal = put(key, value, (Node)root);
+		root = retVal.node;
+		return retVal.oldValue;
 	}
-
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public V remove(K key) {
-		// Проверка: ключ не может быть пустым.
-		if (key == null) throw new NullPointerException("null key");
-
-		// 1. Поиск (почти как в методе get, только с запоминанием пройденного пути).
-		ListNode<Node> path = null;
-		Node current = (Node)root;
-		while (current != null) {
-			if (key.compareTo(current.key) == 0) {
-				// Ключ найден; выходим из цикла.
-				break;
-			} else if (key.compareTo(current.key) < 0) {
-				path = new ListNode<Node>(current, Direction.LEFT, path);
-				current = (Node)current.left;
-			} else {
-				path = new ListNode<Node>(current, Direction.RIGHT, path);
-				current = (Node)current.right;
-			}
-		}
-
-		if (current == null) return null;
-
-		V oldValue = current.value;
-
-		// 2. Производим удаление ключа
-		if (current.left != null && current.right != null) {
-			Node safe = current;
-			path = new ListNode<Node>(current, Direction.RIGHT, path);
-			current = (Node)current.right;
-			while (current.left != null) {
-				path = new ListNode<Node>(current, Direction.LEFT, path);
-				current = (Node)current.left;
-			}
-			safe.key = current.key;
-			safe.value = current.value;
-		}
-
-		Node subst = (Node)(current.left == null ? current.right : current.left);
-		if (path == null) {
-			root = subst;
-			return oldValue;
-		}
-		if (path.d == Direction.RIGHT) {
-			path.info.right = subst;
-		} else {
-			path.info.left = subst;
-		}
-
-		// 3. Коррекция балансов
-		while (path != null) {
-			// Корректируем показатель сбалансированности.
-			// Если он +1 или -1, то работа по балансировке дерева закончена.
-			// Если 0, то продолжаем подниматься вверх.
-			// Если +2 или -2
-			if (path.d == Direction.RIGHT) {
-				path.info.balance++;
-			} else {
-				path.info.balance--;
-			}
-			if (Math.abs(path.info.balance) == 1) break;
-			ListNode<Node> next = path.next;
-			if (path.info.balance != 0) {
-				// Надо выполнять поворот(ы)
-				ListNode<Node> pred = null;
-				if (path.info.balance == 2) {
-					path.d = Direction.LEFT;
-					pred = new ListNode<Node>((Node)path.info.left, Direction.LEFT, path);
-				} else {
-					path.d = Direction.RIGHT;
-					pred = new ListNode<Node>((Node)path.info.right, Direction.LEFT, path);
-				}
-				if (pred.info.balance * path.info.balance >= 0) {
-					// один поворот
-					pivot(pred, path, next);
-				} else {
-					// двойной поворот
-					ListNode<Node> pred1 = null;
-					if (pred.info.balance == 1) {
-						pred.d = Direction.LEFT;
-						pred1 = new ListNode<Node>((Node)pred.info.left, Direction.LEFT, pred);
-					} else {
-						pred.d = Direction.RIGHT;
-						pred1 = new ListNode<Node>((Node)pred.info.right, Direction.LEFT, pred);
-					}
-					pivot(pred1, pred, path);
-					pivot(pred1, path, next);
-				}
-			}
-			path = next;
-		}
-
-		return oldValue;
+		RetValue retVal = remove(key, (Node)root);
+		root = retVal.node;
+		return retVal.oldValue;
 	}
 
 	/**
-	 * Функция поворота меняет местами два узла дерева: p1 и p2
-	 * (p1 поднимается наверх, p2 опускается вниз).
-	 * @param p1 нижний узел пары узлов.
-	 * @param p2 верхний узел пары узлов.
-	 * @param p3 предок узла p2 (может отсутствовать).
-	 * @return Перемещенный узел p1 со скорректированным направлением.
+	 * Заносит новое значение в поддерево, заданное корнем.
+	 * 
+	 * @param key	Ключ поиска
+	 * @param value	Заносимое значение
+	 * @param node	Корень поддерева
+	 * @return		Результат модификации: корень измененного поддерева,
+	 *              признак изменившейся высоты, старое значение узла.
 	 */
-	private void pivot(ListNode<Node> p1,
-			ListNode<Node> p2,
-			ListNode<Node> p3) {
-		// 1. Перевешиваем узел p1 наверх
-		if (p3 == null) {
-			root = p1.info;
-		} else if (p3.d == Direction.LEFT) {
-			p3.info.left = p1.info;
+	@SuppressWarnings("unchecked")
+	private RetValue put(K key, V value, Node node) {
+		if (node == null) {
+			// Создаем и возвращаем новый узел
+			return new RetValue(new Node(key, value), true, null);
 		} else {
-			p3.info.right = p1.info;
-		}
-
-		// Изменяем остальные ссылки и корректируем показатели сбалансированности узлов.
-		if (p2.info.balance > 0) {
-			// Относительные высоты поддеревьев (h1, h2, h3 - в порядке слева направо).
-			short h1 = (short) Math.min(0, p1.info.balance);
-			short h2 = (short) Math.min(0, -p1.info.balance);
-			short h3 = (short) (1 - p2.info.balance);
-			// Изменение ссылок.
-			p2.info.left = p1.info.right;
-			p1.info.right = p2.info;
-			// Корректировка показателей сбалансированности.
-			p2.info.balance = (short) (h2 - h3);
-			p1.info.balance = (short) (h1 - Math.max(h2, h3) - 1);
-		} else {
-			// Относительные высоты поддеревьев (h1, h2, h3 - в порядке слева направо).
-			short h2 = (short) Math.min(0, p1.info.balance);
-			short h3 = (short) Math.min(0, -p1.info.balance);
-			short h1 = (short) (1 + Math.max(h2, h3) + p2.info.balance);
-			// Изменение ссылок.
-			p2.info.right = p1.info.left;
-			p1.info.left = p2.info;
-			// Корректировка показателей сбалансированности.
-			p2.info.balance = (short) (h1 - h2);
-			p1.info.balance = (short) (Math.max(h1, h2) + 1 - h3);
+			int cmp = key.compareTo(node.key);
+			RetValue retVal;
+			if (cmp == 0) {
+				// Нашли ключ, замещаем значение. Структура дерева не меняется.
+				V oldValue = node.value;
+				node.value = value;
+				retVal = new RetValue(node, false, oldValue);
+			} else if (cmp < 0) {
+				// Помещаем новое значение в левое поддерево
+				retVal = put(key, value, (Node)node.left);
+				node.left = retVal.node;
+				retVal.node = node;
+				// Проверяем, надо ли изменить баланс
+				if (retVal.hChanged) {
+					if (++node.balance == 2) {
+						// Дерево разбалансировано; исправляем
+						if (((Node)node.left).balance == -1) {
+							node.left = pivotLeft((Node)node.left);
+						}
+						retVal.node = pivotRight(node);
+						// После исправления высота уменьшается.
+						retVal.hChanged = false;
+					} else {
+						retVal.hChanged = node.balance == 1;
+					}
+				}
+			} else {
+				// Помещаем новое значение в правое поддерево
+				retVal = put(key, value, (Node)node.right);
+				node.right = retVal.node;
+				retVal.node = node;
+				// Проверяем, надо ли изменить баланс
+				if (retVal.hChanged) {
+					if (--node.balance == -2) {
+						// Дерево разбалансировано; исправляем
+						if (((Node)node.right).balance == 1) {
+							node.right = pivotRight((Node)node.right);
+						}
+						retVal.node = pivotLeft(node);
+						// После исправления высота уменьшается.
+						retVal.hChanged = false;
+					} else {
+						retVal.hChanged = node.balance == -1;
+					}
+				}
+			}
+			return retVal;
 		}
 	}
-
+	
+	/**
+	 * Удаляет узел с заданным ключом из поддерева, заданного корнем.
+	 * 
+	 * @param key	Ключ, который нужно удалить
+	 * @param node	Корень поддерева
+	 * @return		Результат, содержащий корень модифицированного поддерева,
+	 * 				старое значение узла и признак того, что дерево изменило высоту.
+	 */
+	@SuppressWarnings("unchecked")
+	private RetValue remove(K key, Node node) {
+		RetValue retVal;
+		if (node == null) {
+			retVal = new RetValue(null, false, null);
+		} else {
+			int cmp = key.compareTo(node.key);
+			if (cmp < 0) {
+				// Удаляем узел из левого поддерева
+				retVal = remove(key, (Node)node.left);
+				node.left = retVal.node;
+				retVal.node = node;
+				// Проверяем, надо ли изменить баланс
+				if (retVal.hChanged) {
+					if (--node.balance == -2) {
+						// Дерево разбалансировано; исправляем
+						if (((Node)node.right).balance == 1) {
+							node.right = pivotRight((Node)node.right);
+						}
+						retVal.node = pivotLeft(node);
+						// После исправления высота может уменьшиться.
+						retVal.hChanged = retVal.node.balance == 0;
+					} else {
+						retVal.hChanged = node.balance == 0;
+					}
+				}
+			} else if (cmp > 0) {
+				// Удаляем узел из правого поддерева
+				retVal = remove(key, (Node)node.right);
+				node.right = retVal.node;
+				retVal.node = node;
+				// Проверяем, надо ли изменить баланс
+				if (retVal.hChanged) {
+					if (++node.balance == 2) {
+						// Дерево разбалансировано; исправляем
+						if (((Node)node.left).balance == -1) {
+							node.left = pivotLeft((Node)node.left);
+						}
+						retVal.node = pivotRight(node);
+						// После исправления высота может уменьшиться.
+						retVal.hChanged = retVal.node.balance == 0;
+					} else {
+						retVal.hChanged = node.balance == 0;
+					}
+				}
+			} else if (node.left == null) {
+				retVal = new RetValue((Node)node.right, true, node.value);
+			} else if (node.right == null) {
+				retVal = new RetValue((Node)node.left, true, node.value);
+			} else {
+				retVal = deleteMin((Node)node.right);
+				node.right = retVal.node;
+				retVal.node = node;
+				node.key = retVal.oldKey;
+				V oldValue = node.value;
+				node.value = retVal.oldValue;
+				retVal.oldValue = oldValue;
+				// Проверяем, надо ли изменить баланс
+				if (retVal.hChanged) {
+					if (++node.balance == 2) {
+						// Дерево разбалансировано; исправляем
+						if (((Node)node.left).balance == -1) {
+							node.left = pivotLeft((Node)node.left);
+						}
+						retVal.node = pivotRight(node);
+						// После исправления высота может уменьшиться.
+						retVal.hChanged = retVal.node.balance == 0;
+					} else {
+						retVal.hChanged = node.balance == 0;
+					}
+				}
+			}
+		}
+		return retVal;
+	}
+	
+	/**
+	 * Удаляет из поддерева, заданного корнем, узел с минимальным значением.
+	 * 
+	 * @param node	Корень поддерева
+	 * @return		Результат, содержащий корень модифицированного поддерева,
+	 * 				ключ и значение удаленного узла, признак изменившейся высоты.
+	 */
+	@SuppressWarnings("unchecked")
+	private RetValue deleteMin(Node node) {
+		if (node.left == null) {
+			return new RetValue((Node)node.right, true, node.key, node.value);
+		} else {
+			RetValue retVal = deleteMin((Node)node.left);
+			node.left = retVal.node;
+			retVal.node = node;
+			if (retVal.hChanged) {
+				if (--node.balance == -2) {
+					// Дерево разбалансировано; исправляем
+					if (((Node)node.right).balance == 1) {
+						node.right = pivotRight((Node)node.right);
+					}
+					retVal.node = pivotLeft(node);
+					// После исправления высота может уменьшиться.
+					retVal.hChanged = retVal.node.balance == 0;
+				} else {
+					retVal.hChanged = node.balance == 0;
+				}
+			}
+			return retVal;
+		}
+	}
+	
+	/**
+	 * Функция левого поворота вокруг заданного узла.
+	 * 
+	 * @param node	Корневой узел, вокруг которого производится поворот
+	 * @return		Корень модифицированного дерева
+	 */
+	@SuppressWarnings("unchecked")
+	private Node pivotLeft(Node node) {
+		// Меняем структуру дерева
+		Node child = (Node)node.right;
+		node.right = child.left;
+		child.left = node;
+		
+		// Меняем показатели баланса
+		short b1 = node.balance;
+		short b2 = child.balance;
+		short cb2 = (short)Math.max(b2, 0);
+		
+		node.balance = (short)(cb2 + 1 + b1 - b2);
+		child.balance = (short)(Math.max(cb2 + 1 + b1, b2) + 1);
+		
+		return child;
+	}
+	
+	/**
+	 * Функция правого поворота вокруг заданного узла.
+	 * 
+	 * @param node	Корневой узел, вокруг которого производится поворот
+	 * @return		Корень модифицированного дерева
+	 */
+	@SuppressWarnings("unchecked")
+	private Node pivotRight(Node node) {
+		// Меняем структуру дерева
+		Node child = (Node)node.left;
+		node.left = child.right;
+		child.right = node;
+		
+		// Меняем показатели баланса
+		short b1 = node.balance;
+		short b2 = child.balance;
+		short cb2 = (short)Math.max(b2, 0);
+		
+		node.balance = (short)(b1 - 1 - cb2);
+		child.balance = (short)(b2 - Math.max(0, cb2 + 1 - b1) - 1);
+		
+		return child;
+	}
+	
 	/**
 	 * Тестирующая функция создает АВЛ-дерево последовательной вставкой элементов.
 	 * @param args не используется.
@@ -304,6 +331,10 @@ public class AVLTreeB<K extends Comparable<K>, V> extends BSTree<K, V> {
 			tree.put(key, 2*key);
 			tree.print();
 			System.out.println("----------------------------");
+		}
+		
+		for (int key : keys) {
+			System.out.println("Changed: <" + key + ", " + tree.put(key, key) + "> to " + key);
 		}
 
 		for (int key : keys) {

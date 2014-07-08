@@ -53,6 +53,11 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 		 * @param value значение
 		 */
 		BSNode(K key, V value) { this(key, value, null, null); }
+		
+		@Override
+		public String toString() {
+			return "<" + key + ", " + value + ">";
+		}
 	}
 
 	// Корень дерева.
@@ -108,7 +113,7 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 		}
 
 		// Печать узла и его поддеревьев.
-		System.out.println("<" + node.key + ", " + node.value + ">");
+		System.out.println(node);
 		print(node.left, indent + 2);
 		print(node.right, indent + 2);
 	}
