@@ -1,7 +1,7 @@
 import java.util.Arrays;
 
 
-public abstract class AVLTree<K extends Comparable<K>, V> {
+public abstract class BSTree<K extends Comparable<K>, V> {
 
 	/**
 	 * Добавление в дерево новой ассоциативной пары.
@@ -25,13 +25,10 @@ public abstract class AVLTree<K extends Comparable<K>, V> {
 	 * Класс представляет узел дерева. Этот класс предназначен только
 	 * для внутренних целей, поэтому он private, и доступ к полям объектов
 	 * этого класса осуществляется непосредственно.
-	 *
-	 * @param <K> тип ключа
-	 * @param <V> тип значения
 	 */
-	protected static class TreeNode<K, V> {
+	protected class BSNode {
 		// Ссылки на левое и правое поддеревья:
-		TreeNode<K, V> left, right;
+		BSNode left, right;
 		// Ключ:
 		K key;
 		// Значение:
@@ -45,7 +42,7 @@ public abstract class AVLTree<K extends Comparable<K>, V> {
 		 * @param left левое поддерево
 		 * @param right правое поддерево
 		 */
-		TreeNode(K key, V value, TreeNode<K, V> left, TreeNode<K, V> right) {
+		BSNode(K key, V value, BSNode left, BSNode right) {
 			this.key = key; this.value = value;
 			this.left = left; this.right = right;
 		}
@@ -55,11 +52,11 @@ public abstract class AVLTree<K extends Comparable<K>, V> {
 		 * @param key ключ
 		 * @param value значение
 		 */
-		TreeNode(K key, V value) { this(key, value, null, null); }
+		BSNode(K key, V value) { this(key, value, null, null); }
 	}
 
 	// Корень дерева.
-	TreeNode<K, V> root = null;
+	BSNode root = null;
 
 
 	/**
@@ -72,7 +69,7 @@ public abstract class AVLTree<K extends Comparable<K>, V> {
 		if (key == null) throw new NullPointerException("null key");
 
 		// Проход по дереву от корня до искомого узла.
-		TreeNode<K, V> current = root;
+		BSNode current = root;
 		while (current != null) {
 			if (key.compareTo(current.key) == 0) {
 				return current.value;
@@ -98,7 +95,7 @@ public abstract class AVLTree<K extends Comparable<K>, V> {
 	 * @param node корневой узел.
 	 * @param indent начальный отступ при печати.
 	 */
-	private void print(TreeNode<K, V> node, int indent) {
+	private void print(BSNode node, int indent) {
 		// Формируем строку из indent пробелов.
 		char[] spaces = new char[indent];
 		Arrays.fill(spaces, ' ');

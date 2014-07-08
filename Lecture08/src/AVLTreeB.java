@@ -14,16 +14,13 @@
  * @param <K> тип ключа
  * @param <V> тип значения
  */
-public class AVLTreeB<K extends Comparable<K>, V> extends AVLTree<K, V> {
+public class AVLTreeB<K extends Comparable<K>, V> extends BSTree<K, V> {
 	/**
 	 * Класс представляет узел дерева. Этот класс предназначен только
 	 * для внутренних целей, поэтому он private, и доступ к полям объектов
 	 * этого класса осуществляется непосредственно.
-	 *
-	 * @param <K> тип ключа
-	 * @param <V> тип значения
 	 */
-	private static class Node<K, V> extends TreeNode<K, V> {
+	private class Node extends BSNode {
 		// Показатель сбалансированности узла:
 		short balance;
 
@@ -35,7 +32,7 @@ public class AVLTreeB<K extends Comparable<K>, V> extends AVLTree<K, V> {
 		 * @param left левое поддерево
 		 * @param right правое поддерево
 		 */
-		Node(K key, V value, short balance, Node<K, V> left, Node<K, V> right) {
+		Node(K key, V value, short balance, Node left, Node right) {
 			super(key, value, left, right);
 			this.balance = balance;
 		}
@@ -87,14 +84,15 @@ public class AVLTreeB<K extends Comparable<K>, V> extends AVLTree<K, V> {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public V put(K key, V value) {
 		// Проверка: ключ не может быть пустым.
 		if (key == null) throw new NullPointerException("null key");
 
 		// 1. Поиск (почти как в методе get, только с запоминанием пройденного пути).
-		ListNode<Node<K, V>> path = null;
-		Node<K, V> current = (Node<K, V>)root;
+		ListNode<Node> path = null;
+		Node current = (Node)root;
 		while (current != null) {
 			if (key.compareTo(current.key) == 0) {
 				// Ключ найден; заменяем старое значение и заканчиваем работу.
@@ -102,16 +100,16 @@ public class AVLTreeB<K extends Comparable<K>, V> extends AVLTree<K, V> {
 				current.value = value;
 				return oldValue;
 			} else if (key.compareTo(current.key) < 0) {
-				path = new ListNode<Node<K, V>>(current, Direction.LEFT, path);
-				current = (Node<K, V>)current.left;
+				path = new ListNode<Node>(current, Direction.LEFT, path);
+				current = (Node)current.left;
 			} else {
-				path = new ListNode<Node<K, V>>(current, Direction.RIGHT, path);
-				current = (Node<K, V>)current.right;
+				path = new ListNode<Node>(current, Direction.RIGHT, path);
+				current = (Node)current.right;
 			}
 		}
 
 		// 2. Вставляем новый узел в дерево.
-		Node<K, V> newNode = new Node<K, V>(key, value);
+		Node newNode = new Node(key, value);
 		if (path == null) {
 			root = newNode;
 		} else if (path.d == Direction.LEFT) {
@@ -122,8 +120,8 @@ public class AVLTreeB<K extends Comparable<K>, V> extends AVLTree<K, V> {
 
 		// 3. Проходим вверх по дереву и проверяем сбалансированность узлов.
 		//    Три последовательных элемента пути - pred1, pred и path.
-		ListNode<Node<K, V>> pred = new ListNode<Node<K, V>>(newNode, Direction.LEFT, path);
-		ListNode<Node<K, V>> pred1 = null;
+		ListNode<Node> pred = new ListNode<Node>(newNode, Direction.LEFT, path);
+		ListNode<Node> pred1 = null;
 		while (path != null) {
 			// Корректируем показатель сбалансированности. Если он ноль, то работа
 			// по балансировке дерева не нужна.
@@ -152,24 +150,25 @@ public class AVLTreeB<K extends Comparable<K>, V> extends AVLTree<K, V> {
 		return null;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public V remove(K key) {
 		// Проверка: ключ не может быть пустым.
 		if (key == null) throw new NullPointerException("null key");
 
 		// 1. Поиск (почти как в методе get, только с запоминанием пройденного пути).
-		ListNode<Node<K, V>> path = null;
-		Node<K, V> current = (Node<K, V>)root;
+		ListNode<Node> path = null;
+		Node current = (Node)root;
 		while (current != null) {
 			if (key.compareTo(current.key) == 0) {
 				// Ключ найден; выходим из цикла.
 				break;
 			} else if (key.compareTo(current.key) < 0) {
-				path = new ListNode<Node<K, V>>(current, Direction.LEFT, path);
-				current = (Node<K, V>)current.left;
+				path = new ListNode<Node>(current, Direction.LEFT, path);
+				current = (Node)current.left;
 			} else {
-				path = new ListNode<Node<K, V>>(current, Direction.RIGHT, path);
-				current = (Node<K, V>)current.right;
+				path = new ListNode<Node>(current, Direction.RIGHT, path);
+				current = (Node)current.right;
 			}
 		}
 
@@ -179,18 +178,18 @@ public class AVLTreeB<K extends Comparable<K>, V> extends AVLTree<K, V> {
 
 		// 2. Производим удаление ключа
 		if (current.left != null && current.right != null) {
-			Node<K, V> safe = current;
-			path = new ListNode<Node<K, V>>(current, Direction.RIGHT, path);
-			current = (Node<K, V>)current.right;
+			Node safe = current;
+			path = new ListNode<Node>(current, Direction.RIGHT, path);
+			current = (Node)current.right;
 			while (current.left != null) {
-				path = new ListNode<Node<K, V>>(current, Direction.LEFT, path);
-				current = (Node<K, V>)current.left;
+				path = new ListNode<Node>(current, Direction.LEFT, path);
+				current = (Node)current.left;
 			}
 			safe.key = current.key;
 			safe.value = current.value;
 		}
 
-		Node<K, V> subst = (Node<K, V>)(current.left == null ? current.right : current.left);
+		Node subst = (Node)(current.left == null ? current.right : current.left);
 		if (path == null) {
 			root = subst;
 			return oldValue;
@@ -213,29 +212,29 @@ public class AVLTreeB<K extends Comparable<K>, V> extends AVLTree<K, V> {
 				path.info.balance--;
 			}
 			if (Math.abs(path.info.balance) == 1) break;
-			ListNode<Node<K, V>> next = path.next;
+			ListNode<Node> next = path.next;
 			if (path.info.balance != 0) {
 				// Надо выполнять поворот(ы)
-				ListNode<Node<K, V>> pred = null;
+				ListNode<Node> pred = null;
 				if (path.info.balance == 2) {
 					path.d = Direction.LEFT;
-					pred = new ListNode<Node<K, V>>((Node<K, V>)path.info.left, Direction.LEFT, path);
+					pred = new ListNode<Node>((Node)path.info.left, Direction.LEFT, path);
 				} else {
 					path.d = Direction.RIGHT;
-					pred = new ListNode<Node<K, V>>((Node<K, V>)path.info.right, Direction.LEFT, path);
+					pred = new ListNode<Node>((Node)path.info.right, Direction.LEFT, path);
 				}
 				if (pred.info.balance * path.info.balance >= 0) {
 					// один поворот
 					pivot(pred, path, next);
 				} else {
 					// двойной поворот
-					ListNode<Node<K, V>> pred1 = null;
+					ListNode<Node> pred1 = null;
 					if (pred.info.balance == 1) {
 						pred.d = Direction.LEFT;
-						pred1 = new ListNode<Node<K, V>>((Node<K, V>)pred.info.left, Direction.LEFT, pred);
+						pred1 = new ListNode<Node>((Node)pred.info.left, Direction.LEFT, pred);
 					} else {
 						pred.d = Direction.RIGHT;
-						pred1 = new ListNode<Node<K, V>>((Node<K, V>)pred.info.right, Direction.LEFT, pred);
+						pred1 = new ListNode<Node>((Node)pred.info.right, Direction.LEFT, pred);
 					}
 					pivot(pred1, pred, path);
 					pivot(pred1, path, next);
@@ -255,9 +254,9 @@ public class AVLTreeB<K extends Comparable<K>, V> extends AVLTree<K, V> {
 	 * @param p3 предок узла p2 (может отсутствовать).
 	 * @return Перемещенный узел p1 со скорректированным направлением.
 	 */
-	private void pivot(ListNode<Node<K, V>> p1,
-			ListNode<Node<K, V>> p2,
-			ListNode<Node<K, V>> p3) {
+	private void pivot(ListNode<Node> p1,
+			ListNode<Node> p2,
+			ListNode<Node> p3) {
 		// 1. Перевешиваем узел p1 наверх
 		if (p3 == null) {
 			root = p1.info;
