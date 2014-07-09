@@ -311,7 +311,7 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	 * @param node Корень поддерева
 	 * @return Высота поддерева
 	 */
-	public int height(Node<K, V> node) {
+	private int height(Node<K, V> node) {
 		if (node == null) {
 			return 0;
 		}
