@@ -25,7 +25,7 @@ public class Sort {
 	
 	/**
 	 * Сортировка участка массива методом слияния.
-	 * Алгоритмописан в виде рекурсивной функции.
+	 * Алгоритм описан в виде рекурсивной функции.
 	 * @param array Исходный массив
 	 * @param p Индекс начала сортируемого участка
 	 * @param r Индекс конца сортируемого участка
@@ -107,11 +107,15 @@ public class Sort {
 	 */
 	public static void main(String[] args) {
 		// Числа можно подобрать по своему вкусу.
-		for (int test : new int[] { 250, 10000, 100000 }) {
-			System.out.println("Сортировка слиянием, " + test + " элементов: " + 
-					testSort(SortType.MERGE_SORT, test) + " миллисекунд");
-			System.out.println("Сортировка простыми вставками, " + test + "  элементов: " + 
-					testSort(SortType.INSERT_SORT, test) + " миллисекунд");
+		int count = 100;
+		System.out.format("Сортируем массивы %d раз%n", count);
+		for (int test : new int[] { 50, 300, 10000 }) {
+			long millisMerge = 0;
+			long millisInsert = 0;
+			for (int i = 0; i < count; i++) millisMerge += testSort(SortType.MERGE_SORT, test);
+			for (int i = 0; i < count; i++) millisInsert += testSort(SortType.INSERT_SORT, test);
+			System.out.format("Сортируем %d элементов%n  Вставками: %d ms, слиянием: %d ms%n",
+					test, millisInsert, millisMerge);
 		}
 	}
 
