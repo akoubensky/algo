@@ -26,28 +26,41 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	 * @param <K> Тип ключа
 	 * @param <V> Тип хранимого значения
 	 */
-	private static class Node<K extends Comparable<K>, V> {
+	private class Node {
 		K key;
 		V value;
-		Node<K, V> less = null;
-		Node<K, V> more = null;
+		Node less;
+		Node more;
 		
 		public Node(K key, V value) {
+			this(key, value, null, null);
+		}
+		
+		public Node(K key, V value, Node less, Node more) {
 			this.key = key;
 			this.value = value;
+			this.less = less;
+			this.more = more;
 		}
 	}
 
 	// Корень дерева
-	private Node<K, V> root = null;
+	private Node root = null;
+	
+	//----------------------------------------------------------
+	// Основные интерфейсные функции
+	//----------------------------------------------------------
 
 	/**
 	 * Поиск по ключу
 	 * @param key Ключ поиска
 	 * @return Хранимое значение или null, если такого ключа нет в дереве
 	 */
-	public V search(K key) {
-	    Node<K, V> current = root;
+	public V get(K key) {
+		if (key == null) {
+			throw new IllegalArgumentException();
+		}
+	    Node current = root;
 	    while (current != null && !key.equals(current.key)) {
 	    	int compare = key.compareTo(current.key);
 	    	if (compare < 0) {
@@ -58,7 +71,7 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	    }
 	    return current == null ? null : current.value;
 	}
-
+	
 	/** 
 	 * Добавление нового узла в лист дерева
 	 * @param key Ключ
@@ -66,38 +79,13 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	 * @return Значение, ранее содержащееся в узле с этим ключом,
 	 *         если такое было. Null, если такого ключа не было в дереве.
 	 */
-	public V add(K key, V value) {
-		Node<K, V> pred = null;
-		Node<K, V> next = root;
-		while (next != null) {
-		    if (key.equals(next.key)) {
-		    	V oldValue = next.value; 
-		    	next.value = value; 
-		    	return oldValue;
-		    }
-		    pred = next;
-		    if (key.compareTo(next.key) < 0) {
-		      next = next.less;
-		    } else {
-		      next = next.more;
-		    }
+	public V put(K key, V value) {
+		if (key == null) {
+			throw new IllegalArgumentException();
 		}
-		Node<K, V> newNode = new Node<K, V>(key, value);
-		if (pred == null) { 
-			root = newNode; 
-		} else if (key.compareTo(pred.key) < 0) { 
-			pred.less = newNode; 
-		} else { 
-			pred.more = newNode; 
-		}
-		return null;
-	}
-	
-	/**
-	 * Направление прохождения по дереву
-	 */
-	private enum Dir {
-		LEFT, RIGHT
+		V oldValue = get(key);
+		root = put(root, key, value);
+		return oldValue;
 	}
 	
 	/**
@@ -109,46 +97,13 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	 *         Null, если не было.
 	 */
 	public V addRoot(K key, V value) {
-		// Удаление "старого" узла
-		V oldValue = remove(key);
-		
-		// Создание нового корня
-		Node<K, V> newRoot = new Node<K, V>(key, value);
-		Node<K, V> left = newRoot;
-		
-		// Прохождение вниз по дереву
-		Node<K, V> node = root;
-		Dir leftBranch = Dir.LEFT;
-		Node<K, V> right = newRoot;
-		Dir rightBranch = Dir.RIGHT;
-		while (node != null) {
-			if (key.compareTo(node.key) < 0) {
-				// Go left
-				if (rightBranch == Dir.LEFT) {
-					right.less = node; 
-				} else {
-					right.more = node;
-				}
-				right = node;
-				rightBranch = Dir.LEFT;
-				node = node.less;
-			} else {
-				// Go right
-				if (leftBranch == Dir.LEFT) {
-					left.less = node; 
-				} else {
-					left.more = node;
-				}
-				left = node;
-				leftBranch = Dir.RIGHT;
-				node = node.more;
-			}
+		if (key == null) {
+			throw new IllegalArgumentException();
 		}
+		// Поиск значения узла по ключу
+		V oldValue = get(key);
 		
-		// Завершение построения дерева
-		if (leftBranch == Dir.LEFT) left.less = null; else left.more = null;
-		if (rightBranch == Dir.LEFT) right.less = null; else right.more = null;
-		root = newRoot;
+		root = new Node(key, value, lessTree(root, key), moreTree(root, key));
 		return oldValue;
 	}
 	
@@ -158,130 +113,17 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	 * @return "Старое" значение узла, если оно ранее было в дереве, иначе null.
 	 */
 	public V remove(K key) {
-		// 1. Поиск удаляемого узла и хранящегося в нем значения.
-		Node<K, V> curr = root, pred = null;
-		boolean left = false;  // предок слева?
-		while (curr != null && !key.equals(curr.key)) {
-		    pred = curr;
-		    if (key.compareTo(curr.key) < 0) {
-		    	left = true; curr = curr.less;
-		    } else {
-		    	left = false; curr = curr.more;
-		    }
+		if (key == null) {
+			throw new IllegalArgumentException();
 		}
-		if (curr == null) return null;
-		V returnValue = curr.value;
-		
-		// 2. Поиск "замены" в структуре дерева – ближайшего справа узла.
-		if (curr.less != null && curr.more != null) {
-		    Node<K, V> toRemove = curr;
-		    pred = curr; left = false; curr = curr.more;
-		    while (curr.less != null) { 
-		    	left = true; pred = curr; curr = curr.less;
-		    }
-		    toRemove.key = curr.key; toRemove.value = curr.value;
-		}
-		
-		// 3. Собственно удаление узла.
-		Node<K, V> replacement = curr.more == null ? curr.less : curr.more;
-		if (pred == null) {
-		    root = replacement;
-		} else if (left) {
-		    pred.less = replacement;
-		} else {
-		    pred.more = replacement;
-		}
-		return returnValue;
+		V oldValue = get(key);
+		root = remove(root, key);
+		return oldValue;
 	}
 	
-	/**
-	 * Реализация итератора двоичного дерева с помощью стека.
-	 * В общем случае задаются "границы итерации" - минимальное и максимальное 
-	 * значения (максимальное при этом не входит в диапазон итерации)
-	 *
-	 * @param <K> Тип ключа
-	 * @param <V> Тип значения
-	 */
-	private static class StackTreeIterator<K extends Comparable<K>, V> implements Iterator<V> {
-		Stack<Node<K, V>> stack = new Stack<Node<K, V>>();
-		Node<K, V> nextNode = null; 
-		K to;
-
-		/**
-		 * Создание итератора всех узлов
-		 * @param root Корень дерева
-		 */
-		public StackTreeIterator(Node<K, V> root) { this(root, null, null); }
-		
-		/**
-		 * Создание итератора узлов из заданного диапазона [from, to)
-		 * @param root Корень дерева
-		 * @param from Минимальное значение в итерации или null, если не задано
-		 * @param to Максимальное значение в итерации (не входит в итерацию)
-		 *           или null, если не задано
-		 */
-		public StackTreeIterator(Node<K, V> root, K from, K to) {
-			if (root != null) {
-				nextNode = firstNode(root, from); 
-				this.to = to;
-			}
-		}
-
-		/**
-		 * Поиск минимального ключа в дереве, большего или равного заданному (если задано)
-		 * @param node
-		 * @param key
-		 * @return
-		 */
-		private Node<K, V> firstNode(Node<K, V> node, K key) {
-			while (true) {
-				if ((key == null ? true : key.compareTo(node.key) <= 0)
-						&& node.less != null) {
-					stack.push(node); node = node.less;
-				} else if (node.more != null) {
-					node = node.more;
-				} else {
-					break;
-				}
-			}
-			return key != null && key.compareTo(node.key) > 0 ? nextNode(node) : node;
-		}
-
-		/**
-		 * Поиск следующего за заданным узла
-		 * @param node Предыдущий узел
-		 * @return Следующий узел
-		 */
-		private Node<K, V> nextNode(Node<K, V> node) {
-			if (node.more != null) { 
-				return firstNode(node.more, null); 
-			}
-			return stack.empty() ? null : stack.pop();
-		}
-		
-		@Override
-		public boolean hasNext() {
-			return nextNode != null && (to == null || nextNode.key.compareTo(to) < 0);
-		}
-	  
-		@Override
-		public V next() {
-			if (!hasNext()) throw new IllegalStateException();
-			V element = nextNode.value;
-			nextNode = nextNode(nextNode);
-			return element;
-		}
-	  
-		@Override
-		public void remove() {
-			// Удаление узла разрушит структуру стека, поэтому операция не реализована
-			throw new UnsupportedOperationException(); 
-		}
-	}
-
 	@Override
 	public Iterator<V> iterator() { 
-		return new StackTreeIterator<K, V>(root); 
+		return new StackTreeIterator(root); 
 	}
 
 	/**
@@ -291,13 +133,9 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	 * @return Итератор
 	 */
 	public Iterator<V> iterator(K from, K to) {
-		return new StackTreeIterator<K, V>(root, from, to);
+		return new StackTreeIterator(root, from, to);
 	}
   
-	// Реализация некоторых функций интерфейса Map
-	public V get(K key) { return search(key); }
-	public V put(K key, V value) { return add(key, value); }
-	
 	/**
 	 * Вычисление высоты дерева
 	 * @return Высота дерева
@@ -307,31 +145,225 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	}
 	
 	/**
+	 * Построение оптимального дерева по заданному массиву ключей.
+	 * @param keys Упорядоченный массив ключей
+	 * @return Оптимальное дерево, содержащее заданный набор ключей.
+	 *         Со всеми ключами ассоциируются пустые значения.
+	 */
+	public static <K extends Comparable<K>, V> BinSearchTree<K, V> buildOptimalTree(K[] keys) {
+		// Полагаем массив ключей keys отсортированным
+		BinSearchTree<K, V> t = new BinSearchTree<>();
+		t.root = buildOptimalTree(t, keys, 0, keys.length);
+		return t;
+	}
+
+	//--------------------------------------------------------------
+	// Private functions
+	//--------------------------------------------------------------
+	
+	/**
+	 * Рекурсивно добавляет новую ассоциативную пару из ключа и значения
+	 * в дерево, корень которого назодится в заданном узле.
+	 * 
+	 * @param node	Корень дерева
+	 * @param key	Ключ
+	 * @param value	Значение
+	 * @return		Поддерево с добавленным узлом
+	 */
+	private Node put(Node node, K key, V value) {
+		if (node == null) {
+			return new Node(key, value);
+		} else if (node.key.equals(key)) {
+			node.value = value;
+		} else if (node.key.compareTo(key) > 0) {
+			node.less = put(node.less, key, value);
+		} else {
+			node.more = put(node.more, key, value);
+		}
+		return node;
+	}
+
+	/**
+	 * Строит дерево из узлов заданного дерева, выбирая те из них,
+	 * которые меньше заданного.
+	 * 
+	 * @param node	Исходное дерево.
+	 * @param key	Заданное значение для фильтрации.
+	 * @return		Результирующее отфильтрованное дерево.
+	 */
+	private Node lessTree(Node node, K key) {
+		if (node == null) {
+			return null;
+		} else if (key.equals(node.key)) {
+			// Просто левое поддерево
+			return node.less;
+		} else if (node.key.compareTo(key) < 0) {
+			// Левое поддерево берется целиком, а из правого выбираются узлы,
+			// меньшие заданного значения (рекурсивным применением функции)
+			return new Node(node.key, node.value, node.less, lessTree(node.more, key));
+		} else {
+			// Фильтруем только левое поддерево
+			return lessTree(node.less, key);
+		}
+	}
+	
+	/**
+	 * Строит дерево из узлов заданного дерева, выбирая те из них,
+	 * которые больше заданного.
+	 * 
+	 * @param node	Исходное дерево.
+	 * @param key	Заданное значение для фильтрации.
+	 * @return		Результирующее отфильтрованное дерево.
+	 */
+	private Node moreTree(Node node, K key) {
+		if (node == null) {
+			return null;
+		} else if (key.equals(node.key)) {
+			// Просто правое поддерево
+			return node.more;
+		} else if (node.key.compareTo(key) > 0) {
+			// Правое поддерево берется целиком, а из левого выбираются узлы,
+			// большие заданного значения (рекурсивным применением функции)
+			return new Node(node.key, node.value, moreTree(node.less, key), node.more);
+		} else {
+			// Фильтруем только правое поддерево
+			return moreTree(node.more, key);
+		}
+	}
+	
+	/**
+	 * Удаляет из дерева узел с заданным значением ключа.
+	 * 
+	 * @param node	Корень дерева
+	 * @param key	Заданный ключ
+	 * @return		Модифицированное дерево.
+	 */
+	private Node remove(Node node, K key) {
+		if (node == null) {
+			return null;
+		} else if (node.key.equals(key)) {
+			// Удаляем корень дерева
+			if (node.less == null) {
+				// Левого поддерева нет, просто возвращаем правое поддерево
+				return node.more;
+			} else if (node.more == null) {
+				// Правого поддерева нет, просто возвращаем левое поддерево
+				return node.less;
+			} else {
+				// Оба поддерева есть, из правого поддерева удаляем узел
+				// с минимальным значением ключа и переносим информацию из него в корень
+				node.more = removeMin(node.more, node);
+			}
+		} else if (node.key.compareTo(key) < 0) {
+			// Рекурсивное удаление из правого поддерева
+			node.more = remove(node.more, key);
+		} else {
+			// Рекурсивное удаление из левого поддерева
+			node.less = remove(node.less, key);
+		}
+		return node;
+	}
+	
+	/**
+	 * Удаляет из дерева узел с минимальным значением ключа.
+	 * 
+	 * @param node		Корень дерева
+	 * @param removed	Узел, в который переписывается информация из удаленного узла
+	 * @return			Модифицированное дерево
+	 */
+	private Node removeMin(Node node, Node removed) {
+		if (node.less == null) {
+			// Минимальный узел найден, переписываем информацию из него.
+			removed.key = node.key;
+			removed.value = node.value;
+			return node.more;
+		} else {
+			node.less = removeMin(node.less, removed);
+			return node;
+		}
+	}
+	
+	
+	/**
+	 * Реализация итератора двоичного дерева с помощью стека.
+	 * В общем случае задаются "границы итерации" - минимальное и максимальное 
+	 * значения (максимальное при этом не входит в диапазон итерации)
+	 *
+	 * @param <K> Тип ключа
+	 * @param <V> Тип значения
+	 */
+	private class StackTreeIterator implements Iterator<V> {
+		Stack<Node> stack = new Stack<Node>();
+		K to;
+
+		/**
+		 * Создание итератора всех узлов
+		 * @param root Корень дерева
+		 */
+		public StackTreeIterator(Node root) { this(root, null, null); }
+		
+		/**
+		 * Создание итератора узлов из заданного диапазона [from, to)
+		 * @param root Корень дерева
+		 * @param from Минимальное значение в итерации или null, если не задано
+		 * @param to Максимальное значение в итерации (не входит в итерацию)
+		 *           или null, если не задано
+		 */
+		public StackTreeIterator(Node root, K from, K to) {
+			toStack(root, from); 
+			this.to = to;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return !stack.empty() && (to == null || stack.peek().key.compareTo(to) < 0);
+		}
+	  
+		@Override
+		public V next() {
+			if (!hasNext()) throw new IllegalStateException();
+			V element = stack.peek().value;
+			toStack(stack.pop().more, null);
+			return element;
+		}
+	  
+		@Override
+		public void remove() {
+			// Удаление узла разрушит структуру стека, поэтому операция не реализована
+			throw new UnsupportedOperationException(); 
+		}
+		
+		/**
+		 * Поиск минимального ключа в дереве, большего или равного заданному (если задано)
+		 * @param node
+		 * @param key
+		 * @return
+		 */
+		private void toStack(Node node, K key) {
+			if (node == null) {
+				return;
+			}
+			if (key != null && node.key.compareTo(key) < 0) {
+				toStack(node.more, key);
+			} else if (key == null || node.key.compareTo(key) >= 0) {
+				stack.push(node);
+				toStack(node.less, key);
+			}
+		}
+	}
+
+	/**
 	 * Вспомогательная рекурсивная функция, вычисляющая высоту поддерева.
 	 * @param node Корень поддерева
 	 * @return Высота поддерева
 	 */
-	private int height(Node<K, V> node) {
+	private int height(Node node) {
 		if (node == null) {
 			return 0;
 		}
 		return Math.max(height(node.less), height(node.more)) + 1;
 	}
 	
-	/**
-	 * Построение оптимального дерева по заданному массиву ключей.
-	 * @param keys Упорядоченный массив ключей
-	 * @return Оптимальное дерево, содержащее заданный набор ключей.
-	 *         Со всеми ключами ассоциируются пустые значения.
-	 */
-	public static <K extends Comparable<K>, V> BinSearchTree<K, V> 
-				buildOptimalTree(K[] keys) {
-		// Полагаем массив ключей keys отсортированным
-		BinSearchTree<K, V> t = new BinSearchTree<K, V>();
-		t.root = buildOptimalTree(keys, 0, keys.length);
-		return t;
-	}
-
 	/**
 	 * Вспомогательная функция, реализующая построение оптимального дерева
 	 * по заданному набору ключей с индексами [begin, end)
@@ -340,15 +372,19 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	 * @param end конечный индекс в массиве
 	 * @return
 	 */
-	private static <K extends Comparable<K>, V> Node<K, V>
-     			buildOptimalTree(K[] keys, int begin, int end) {
+	private static <K extends Comparable<K>, V> BinSearchTree<K, V>.Node
+			buildOptimalTree(BinSearchTree<K, V> t, K[] keys, int begin, int end) {
 		if (begin == end) return null;
 		int mid = (begin + end) / 2;
-		Node<K, V> root = new Node<K, V>(keys[mid], null);
-		root.less = buildOptimalTree(keys, begin, mid);
-		root.more = buildOptimalTree(keys, mid+1, end);
+		BinSearchTree<K, V>.Node root = t.new Node(keys[mid], null);
+		root.less = buildOptimalTree(t, keys, begin, mid);
+		root.more = buildOptimalTree(t, keys, mid + 1, end);
 		return root;
 	}
+	
+	//------------------------------------------------------------
+	// Тестирование
+	//------------------------------------------------------------
 	
 	/**
 	 * Тестирование некоторых функций
@@ -358,16 +394,14 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 		// Построение дерева с произвольно взятым набором ключей
 		BinSearchTree<Integer, String> tree = new BinSearchTree<Integer, String>();
 		
-		tree.put(6, "six");
-		tree.put(3, "three");
-		tree.put(9, "nine");
-		tree.put(2, "two");
-		tree.put(5, "five");
-		tree.put(7, "seven");
-		tree.put(10, "ten");
-		tree.put(1, "one");
-		tree.put(8, "eight");
+		int[] keys = {6, 3, 9, 2, 5, 7, 10, 1, 8};
+		String[] values = {"six", "three", "nine", "two", "five", "seven", "ten", "one", "eight"};
+		
+		for (int i = 0; i < keys.length; i++) {
+			tree.put(keys[i],  values[i]);
+		}
 		tree.addRoot(4, "four");
+		
 		// Итерация и печать элементов дерева
 		for (String s : tree) {
 			System.out.print(s + " ");
@@ -381,12 +415,22 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 		}
 		System.out.println();
 		
+		// Удаление узлов
+		for (int key : keys) {
+			System.out.print(tree.remove(key) + " ");
+		}
+		System.out.println();
+		for (String s : tree) {
+			System.out.print(s + " ");
+		}
+		System.out.println();
+		
 		// Построение оптимального дерева
-		Integer[] keys = new Integer[] {
+		Integer[] optKeys = new Integer[] {
 				1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 		};
-		BinSearchTree<Integer, Integer> optTree = buildOptimalTree(keys);
-		for (Integer i : keys) optTree.put(i, i);
+		BinSearchTree<Integer, Integer> optTree = buildOptimalTree(optKeys);
+		for (Integer i : optKeys) optTree.put(i, i);
 		
 		// Итерация построенного оптимального дерева
 		for (Integer s : optTree) {
