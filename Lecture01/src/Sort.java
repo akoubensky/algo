@@ -108,7 +108,7 @@ public class Sort {
 	public static void main(String[] args) {
 		// Числа можно подобрать по своему вкусу.
 		int count = 100;
-		System.out.format("Сортируем массивы %d раз%n", count);
+		System.out.format("Повторяем сортировки %d раз%n", count);
 		for (int test : new int[] { 50, 300, 10000 }) {
 			long millisMerge = 0;
 			long millisInsert = 0;

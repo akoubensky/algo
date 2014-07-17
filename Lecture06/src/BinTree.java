@@ -1,6 +1,10 @@
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Spliterator;
 import java.util.Stack;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * Простое двоичное дерево с итерацией. Поддерживаются операции:
@@ -19,9 +23,13 @@ class BinTree<T> implements Iterable<T> {
 	 */
 	public static class Node<T> {
 		private T info;
-		private Node<T> parent;
 		private Node<T> left;
 		private Node<T> right;
+		/**
+		 * Ссылка на родительский узел используется только в одном из алгоритмов
+		 * внешней итерации узлов. См. {@link BinTree.TreeIterator}
+		 */
+		private Node<T> parent;
 
 		/**
 		 * Конструктор узла дерева.
@@ -81,7 +89,7 @@ class BinTree<T> implements Iterable<T> {
 	public BinTree() {}
 
 	/**
-	 * Конструктор дерева с заданным корнем
+	 * Конструктор дерева с заданным корнем.
 	 * @param node Корень дерева
 	 */
 	public BinTree(Node<T> node) {
@@ -89,21 +97,23 @@ class BinTree<T> implements Iterable<T> {
 	}
 
 	/**
-	 * Внутренний итератор дерева.
+	 * Внутренний итератор дерева. В Java 8 можно вместо типа данных {@link Action}
+	 * использовать встроенный функциональный интерфейс {@link Consumer}.
+	 * 
 	 * @param action Действие, выполняемое с узлом.
 	 */
 	public void iterate(Action<T> action) { iterate(action, root); }
 
 	/**
-	 * Рекурсивная вспомогательная функция, 
-	 * реализующая внутреннюю итерацию дерева
+	 * Рекурсивная вспомогательная функция, реализующая внутреннюю итерацию дерева.
+	 * 
 	 * @param action Действие, выполняемое с узлом дерева
 	 * @param node Корень итерируемого поддерева.
 	 */
 	private static <T> void iterate(Action<T> action, Node<T> node) {
 		if (node != null) {
 			iterate(action, node.left);
-			action.action(node.info);
+			action.accept(node.info);
 			iterate(action, node.right);
 		}
 	}
@@ -126,7 +136,9 @@ class BinTree<T> implements Iterable<T> {
 	}
 
 	/**
-	 * Реализация внешнего итератора дерева.
+	 * Реализация внешнего итератора дерева, использующая для перехода к следующему
+	 * узлу дерева проход по ссылке на родительский узел.
+	 * 
 	 * @param <T> Тип итерируемых элементов.
 	 */
 	private static class TreeIterator<T> implements Iterator<T> {
@@ -201,10 +213,12 @@ class BinTree<T> implements Iterable<T> {
 
 	/**
 	 * Реализация внешнего итератора двоичного дерева на основе стека.
+	 * Ссылка на родительский узел не используется.
 	 * @param <T> Тип итерируемых элементов
 	 */
 	private static class StackTreeIterator<T> implements Iterator<T> {
-		// Стек для хранения корней пройденных (под)деревьев.
+		// Стек для хранения корней поддеревьев, которые вместе со своими правыми
+		// поддеревьями подлежат рассмотрению в будущем.
 		Stack<Node<T>> stack = new Stack<Node<T>>();
 
 		/**
@@ -212,11 +226,9 @@ class BinTree<T> implements Iterable<T> {
 		 * @param root Корень дерева
 		 */
 		public StackTreeIterator(Node<T> root) {
-			if (root != null) {
-				// Проходим к самому левому узлу,
-				// запоминая промежуточные узлы в стеке.
-				firstNode(root);
-			}
+			// Проходим к самому левому узлу,
+			// запоминая промежуточные узлы в стеке.
+			toStack(root);
 		}
 
 		/**
@@ -224,10 +236,11 @@ class BinTree<T> implements Iterable<T> {
 		 * с запоминанием промежуточных узлов в стеке.
 		 * @param node Корень (под)дерева
 		 */
-		private void firstNode(Node<T> node) {
-			do {
-				stack.push(node); node = node.left;
-			} while (node != null);
+		private void toStack(Node<T> node) {
+			while (node != null) {
+				stack.push(node);
+				node = node.left;
+			}
 		}
 
 		@Override
@@ -238,9 +251,7 @@ class BinTree<T> implements Iterable<T> {
 			}
 			Node<T> node = stack.pop();
 			// Проходим левый гребень правого поддерва.
-			if (node.right != null) {
-				firstNode(node.right);
-			}
+			toStack(node.right);
 			return node.info;
 		}
 
@@ -256,6 +267,82 @@ class BinTree<T> implements Iterable<T> {
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}
+	}
+	
+	/**
+	 * Реализация внешнего итератора для параллельной обработки дерева.
+	 * Использует средства Java 8.
+	 * @param <T>
+	 */
+	private static class TreeSpliterator<T> implements Spliterator<T> {
+		// Стек для хранения корней пройденных (под)деревьев.
+		Stack<Node<T>> stack;
+		
+		/**
+		 * Конструктор берет в качестве параметра уже готовый стек непройденных узлов.
+		 * 
+		 * @param stack	Стек непройденных узлов.
+		 */
+		TreeSpliterator(Stack<Node<T>> stack) { this.stack = stack; }
+		
+		/**
+		 * Записывает в стек "левый гребень" дерева, корнем которого
+		 * является заданный узел.
+		 * 
+		 * @param stack	Стек, в который происходит запись узлов.
+		 * @param node	Корень поддерева, левый гребень которого записывается.
+		 */
+		static <T> void toStack(Stack<Node<T>> stack, Node<T> node) {
+			while (node != null) {
+				stack.push(node);
+				node = node.left;
+			}
+		}
+
+		@Override
+		public boolean tryAdvance(Consumer<? super T> action) {
+			if (stack.empty()) {
+				// Больше нет узлов для итерации
+				return false;
+			} else {
+				// Берем очередной узел для итерации с вершины стека.
+				Node<T> node = stack.pop();
+				action.accept(node.info);
+				// Записываем в стек правое поддерево пройденного узла.
+				toStack(stack, node.right);
+				return true;
+			}
+		}
+
+		@Override
+		public Spliterator<T> trySplit() {
+			// Делим стек непройденных узлов на две неравные части,
+			// если в стеке есть хотя бы два узла.
+			if (stack.size() <= 1) {
+				return null;
+			}
+			// Отделяем вершину, лежащую на дне стека.
+			Node<T> bottom = stack.remove(0);
+			Spliterator<T> newSpliterator = new TreeSpliterator<>(stack);
+			// Отрезаем от вершины, лежащей на дне стека, левое поддерево
+			// и записываем ее вместе с правым поддеревом в новый стек.
+			stack = new Stack<>();
+			stack.push(new Node<>(bottom.info, null, bottom.right, bottom.parent));
+			
+			return newSpliterator;
+		}
+
+		@Override
+		public long estimateSize() {
+			// Грубая оценка числа оставшихся вершин по числу вершин в стеке.
+			return (1L << stack.size()) - 1;
+		}
+
+		@Override
+		public int characteristics() {
+			return ORDERED | CONCURRENT;
+		}
+		
 	}
 	
 	//-------------------------------------------------------------------
@@ -285,6 +372,22 @@ class BinTree<T> implements Iterable<T> {
 	public Iterator<T> iteratorsIterator() {
 		return iterator(root);
 	}
+	
+	@Override
+	public Spliterator<T> spliterator() {
+		Stack<Node<T>> stack = new Stack<>();
+		TreeSpliterator.toStack(stack, root);
+		return new TreeSpliterator<>(stack);
+	}
+	
+	/**
+	 * Превращает дерево в поток узлов для, возможно, параллельной обработки,
+	 * используя {@link BinTree.spliterator}
+	 * @return
+	 */
+	public Stream<T> stream() {
+		return StreamSupport.stream(spliterator(), true);
+	}
 
 	/**
 	 * Проверяем работу всех типов итераторов дерева.
@@ -308,7 +411,7 @@ class BinTree<T> implements Iterable<T> {
 
 		// Запускаем внутренний итератор
 		tree.iterate(new Action<Integer>() {
-			public void action(Integer item) {
+			public void accept(Integer item) {
 				System.out.print(" " + item);
 			}
 		});
@@ -330,6 +433,13 @@ class BinTree<T> implements Iterable<T> {
 		for (Iterator<Integer> it = tree.iteratorsIterator(); it.hasNext(); ) {
 			System.out.print(" " + it.next());
 		}
+		System.out.println();
+		
+		// Запускаем параллельный итератор всех узлов, больших единицы (на основе
+		// операций с потоками - Java 8)
+		tree.stream()
+		    .filter(x -> x > 1)
+		    .forEach(x -> System.out.format(" %d", x));
 		System.out.println();
 	}
 
