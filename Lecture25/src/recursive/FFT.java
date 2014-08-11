@@ -1,5 +1,4 @@
 package recursive;
-import java.util.Arrays;
 
 import calc.Complex;
 
@@ -12,8 +11,8 @@ public class FFT {
 	 * @param a	Массив коэффициентов 
 	 * @return	Массив значений многочлена в точках, равных корням из единицы.
 	 */
-	public static Complex[] FFT(Complex[] a) {
-		return FFT(Complex.complement(a), false);
+	public static Complex[] dirFourier(Complex[] a) {
+		return fourier(Complex.complement(a), false);
 	}
 	
 	/**
@@ -21,8 +20,8 @@ public class FFT {
 	 * @param a	Массив значений многочлена в точках, равных корням из единицы 
 	 * @return	Массив коэффициентов.
 	 */
-	public static Complex[] InvFFT(Complex[] a) {
-		return FFT(Complex.complement(a), true);
+	public static Complex[] invFourier(Complex[] a) {
+		return fourier(Complex.complement(a), true);
 	}
 	
 	/**
@@ -31,7 +30,7 @@ public class FFT {
 	 * @param invert	Это обратное преобразование?
 	 * @return			Массив точек результата.
 	 */
-	private static Complex[] FFT(Complex[] a, boolean invert) {
+	private static Complex[] fourier(Complex[] a, boolean invert) {
 		int n = a.length;
 		if (n == 1) {
 			return a;
@@ -51,8 +50,8 @@ public class FFT {
 		}
 		
 		// Рекурсивный вызов алгоритма
-		Complex[] y0 = FFT(a0, invert);
-		Complex[] y1 = FFT(a1, invert);
+		Complex[] y0 = fourier(a0, invert);
+		Complex[] y1 = fourier(a1, invert);
 		
 		// Результат преобразования Фурье
 		Complex[] y = new Complex[n];

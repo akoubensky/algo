@@ -1,4 +1,4 @@
-package kruskal;
+п»їpackage kruskal;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -12,11 +12,11 @@ import kruskal.Graph.Arc;
 
 public class Kruskal {
 	/**
-	 * Этот класс представляет ребро, в котором помимо конца дуги
-	 * и ее длины содержится еще и начало.
+	 * Р­С‚РѕС‚ РєР»Р°СЃСЃ РїСЂРµРґСЃС‚Р°РІР»СЏРµС‚ СЂРµР±СЂРѕ, РІ РєРѕС‚РѕСЂРѕРј РїРѕРјРёРјРѕ РєРѕРЅС†Р° РґСѓРіРё
+	 * Рё РµРµ РґР»РёРЅС‹ СЃРѕРґРµСЂР¶РёС‚СЃСЏ РµС‰Рµ Рё РЅР°С‡Р°Р»Рѕ.
 	 */
 	public static class Edge extends Arc {
-		final int from;	// Начало дуги
+		final int from;	// РќР°С‡Р°Р»Рѕ РґСѓРіРё
 		
 		public Edge(int from, int to, double weight) {
 			super(to, weight);
@@ -29,11 +29,11 @@ public class Kruskal {
 		}
 	}
 	
-	final private Graph graph;	// Граф, для которого строится скелет
-	final private int nVert;	// Число вершин в графе
+	final private Graph graph;	// Р“СЂР°С„, РґР»СЏ РєРѕС‚РѕСЂРѕРіРѕ СЃС‚СЂРѕРёС‚СЃСЏ СЃРєРµР»РµС‚
+	final private int nVert;	// Р§РёСЃР»Рѕ РІРµСЂС€РёРЅ РІ РіСЂР°С„Рµ
 	
-	private Set<Edge> edges;			// Список ребер, входящих в скелет
-	private SortedSet<Edge> allEdges;	// Список всех ребер графа
+	private Set<Edge> edges;			// РЎРїРёСЃРѕРє СЂРµР±РµСЂ, РІС…РѕРґСЏС‰РёС… РІ СЃРєРµР»РµС‚
+	private SortedSet<Edge> allEdges;	// РЎРїРёСЃРѕРє РІСЃРµС… СЂРµР±РµСЂ РіСЂР°С„Р°
 	
 	public Kruskal(Graph g) {
 		graph = g;
@@ -105,7 +105,7 @@ public class Kruskal {
 	}
 	
 	/**
-	 * Тестовая функция, строящая связный граф и вычисляющая его скелет
+	 * РўРµСЃС‚РѕРІР°СЏ С„СѓРЅРєС†РёСЏ, СЃС‚СЂРѕСЏС‰Р°СЏ СЃРІСЏР·РЅС‹Р№ РіСЂР°С„ Рё РІС‹С‡РёСЃР»СЏСЋС‰Р°СЏ РµРіРѕ СЃРєРµР»РµС‚
 	 * @param args
 	 */
 	public static void main(String[] args) {

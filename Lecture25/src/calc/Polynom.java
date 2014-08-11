@@ -111,14 +111,14 @@ public class Polynom {
 		b = Complex.complement(b, length);
 		
 		// Прямое преобразование Фурье
-		Complex[] ya = recursive.FFT.FFT(a);
-		Complex[] yb = recursive.FFT.FFT(b);
+		Complex[] ya = recursive.FFT.dirFourier(a);
+		Complex[] yb = recursive.FFT.dirFourier(b);
 		// Перемножение
 		for (int i = 0; i < ya.length; ++i) {
 			ya[i].multiply(yb[i]);
 		}
 		// Обратное преобразование Фурье
-		return new Polynom(recursive.FFT.InvFFT(ya));
+		return new Polynom(recursive.FFT.invFourier(ya));
 	}
 	
 	/**
@@ -134,13 +134,13 @@ public class Polynom {
 		b = Complex.complement(b, length);
 		
 		// Прямое преобразование Фурье
-		Complex[] ya = nonrec.FFT.FFT(a);
-		Complex[] yb = nonrec.FFT.FFT(b);
+		Complex[] ya = nonrec.FFT.dirFourier(a);
+		Complex[] yb = nonrec.FFT.dirFourier(b);
 		// Перемножение
 		for (int i = 0; i < ya.length; ++i) {
 			ya[i].multiply(yb[i]);
 		}
 		// Обратное преобразование Фурье
-		return new Polynom(nonrec.FFT.invFFT(ya));
+		return new Polynom(nonrec.FFT.invFourier(ya));
 	}
 }

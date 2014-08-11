@@ -35,6 +35,7 @@ public class Graph<W extends Number> implements Iterable<Integer> {
 	 * Конструктор пустого графа с заданным числом вершин
 	 * @param nVert Число вершин
 	 */
+	@SuppressWarnings("unchecked")
 	public Graph(int nVert) {
 		lGraph = new Arc[nVert];
 		nVertex = nVert;

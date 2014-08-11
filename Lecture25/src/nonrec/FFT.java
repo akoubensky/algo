@@ -1,5 +1,4 @@
 package nonrec;
-import java.util.Arrays;
 
 import calc.Complex;
 
@@ -12,8 +11,8 @@ public class FFT {
 	 * @param a	Массив коэффициентов 
 	 * @return	Массив значений многочлена в точках, равных корням из единицы.
 	 */
-	public static Complex[] FFT(Complex[] a) {
-		return FFT(Complex.complement(a), false);
+	public static Complex[] dirFourier(Complex[] a) {
+		return fourier(Complex.complement(a), false);
 	}
 	
 	/**
@@ -21,8 +20,8 @@ public class FFT {
 	 * @param a	Массив значений многочлена в точках, равных корням из единицы 
 	 * @return	Массив коэффициентов.
 	 */
-	public static Complex[] invFFT(Complex[] a) {
-		return FFT(Complex.complement(a), true);
+	public static Complex[] invFourier(Complex[] a) {
+		return fourier(Complex.complement(a), true);
 	}
 	
 	/**
@@ -65,7 +64,7 @@ public class FFT {
 	 * @param invert	Это обратное преобразование?
 	 * @return			Массив точек результата.
 	 */
-	private static Complex[] FFT(Complex[] a, boolean invert) {
+	private static Complex[] fourier(Complex[] a, boolean invert) {
 		int n = a.length;
 		
 		// Расстановка элементов в соответствии с "двоично обращенными" индексами

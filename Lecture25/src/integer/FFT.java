@@ -10,8 +10,8 @@ public class FFT {
 	 * @param a	Массив коэффициентов 
 	 * @return	Массив значений многочлена в точках, равных корням из единицы.
 	 */
-	public static int[] FFT(int[] a) {
-		return FFT(Modulo.complement(a), false);
+	public static int[] dirFourier(int[] a) {
+		return fourier(Modulo.complement(a), false);
 	}
 	
 	/**
@@ -19,8 +19,8 @@ public class FFT {
 	 * @param a	Массив значений многочлена в точках, равных корням из единицы 
 	 * @return	Массив коэффициентов.
 	 */
-	public static int[] invFFT(int[] a) {
-		return FFT(Modulo.complement(a), true);
+	public static int[] invFourier(int[] a) {
+		return fourier(Modulo.complement(a), true);
 	}
 	
 	/**
@@ -63,7 +63,7 @@ public class FFT {
 	 * @param invert	Это обратное преобразование?
 	 * @return			Массив точек результата.
 	 */
-	private static int[] FFT(int[] a, boolean invert) {
+	private static int[] fourier(int[] a, boolean invert) {
 		// Все значения a[i] должны быть неотрицательными!
 		int n = a.length;						// Длина массива
 		int maxn = 1 << 13;						// Максимально возможная длина

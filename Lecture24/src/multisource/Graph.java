@@ -53,6 +53,7 @@ public class Graph {
 	 * Конструктор пустого графа с заданным числом вершин
 	 * @param nVert Число вершин
 	 */
+	@SuppressWarnings("unchecked")
 	public Graph(int nVert) {
 		lGraph = new List[nVert];
 		for (int i = 0; i < nVert; ++i) {

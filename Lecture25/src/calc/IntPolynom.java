@@ -97,14 +97,14 @@ public class IntPolynom {
 		b = Modulo.complement(b, length);
 		
 		// Прямое преобразование Фурье
-		int[] ya = integer.FFT.FFT(a);
-		int[] yb = integer.FFT.FFT(b);
+		int[] ya = integer.FFT.dirFourier(a);
+		int[] yb = integer.FFT.dirFourier(b);
 		// Перемножение
 		for (int i = 0; i < ya.length; ++i) {
 			ya[i] *= yb[i];
 		}
 		// Обратное преобразование Фурье
-		return new IntPolynom(integer.FFT.invFFT(ya));
+		return new IntPolynom(integer.FFT.invFourier(ya));
 	}
 
 }
