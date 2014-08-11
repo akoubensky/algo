@@ -13,7 +13,9 @@ public class Tree<T> {
 	 * @param <T>
 	 */
 	public static class Node<T> {
+		@SuppressWarnings("unused")
 		private T info;				// "Полезная" информация, содержащаяся в узле
+		@SuppressWarnings("unused")
 		private Node<T> parent;		// Ссылка на узел предка
 		private Node<T> son;		// Ссылка на "старшего" сына
 		private Node<T> brother;	// Ссылка на "брата"
