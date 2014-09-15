@@ -65,4 +65,28 @@ public class ListMap<K, V> extends AbstractMap <K, V> {
 		listSet.add(new AbstractMap.SimpleEntry<>(key, value));
 		return null;
 	}
+	
+	public static void main(String[] args) {
+		Map<String, Integer> myMap = new ListMap<>();
+		
+		myMap.put("alfa", 1);
+		myMap.put("beta", 2);
+		myMap.put("gamma", 111);
+		myMap.put("delta", 4);
+		myMap.put("epsilon", 5);
+		myMap.put("dzeta", 6);
+		myMap.put("eta", 7);
+		myMap.put("gamma", 3);
+		System.out.println(myMap.get("dzeta"));
+
+		for (String i : myMap.keySet()) {
+			System.out.print("  " + i);
+		}
+		System.out.println();
+
+		for (Integer i : myMap.values()) {
+			System.out.print("  " + i);
+		}
+		System.out.println();
+	}
 }
