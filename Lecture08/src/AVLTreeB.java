@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 
 /**
  * Реализация основных операций АВЛ-дерева. В узлах дерева хранятся показатели
@@ -77,7 +79,7 @@ public class AVLTreeB<K extends Comparable<K>, V> extends BSTree<K, V> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public V put(K key, V value) {
-		RetValue retVal = put(key, value, (Node)root);
+		RetValue retVal = put(Objects.requireNonNull(key, "null key"), value, (Node)root);
 		root = retVal.node;
 		return retVal.oldValue;
 	}
@@ -85,7 +87,7 @@ public class AVLTreeB<K extends Comparable<K>, V> extends BSTree<K, V> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public V remove(K key) {
-		RetValue retVal = remove(key, (Node)root);
+		RetValue retVal = remove(Objects.requireNonNull(key, "null key"), (Node)root);
 		root = retVal.node;
 		return retVal.oldValue;
 	}
