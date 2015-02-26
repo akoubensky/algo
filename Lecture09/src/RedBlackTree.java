@@ -389,7 +389,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 	 */
 	public static void main(String[] args) {
 		RedBlackTree<Integer, Integer> tree = new RedBlackTree<Integer, Integer>();
-		int[] keys = { 12, 7, 9, 1, 11, 8, 15, 13, 3, 10 };
+		int[] keys = { 10, 6, 14, 2, 8, 12, 17, 15, 19 };
 		
 		// Вставляем элементы в дерево
 		for (int key : keys) {
