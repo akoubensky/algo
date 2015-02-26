@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.Objects;
 
 
 public abstract class BSTree<K extends Comparable<K>, V> {
@@ -37,7 +38,6 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 		 * Конструктор произвольного узла.
 		 * @param key ключ
 		 * @param value значение
-		 * @param color цвет узла
 		 * @param left левое поддерево
 		 * @param right правое поддерево
 		 */
@@ -61,6 +61,33 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 	
 	// Корень дерева
 	BSNode root = null;
+
+	/**
+	 * Поиск в дереве по ключу.
+	 * @param key ключ поиска.
+	 * @return найденное значение или null, если такого ключа нет в дереве.
+	 */
+	public V get(K key) {
+		// Вызов рекурсивной функции с проверкой: ключ поиска не должен быть пустым.
+		return get(Objects.requireNonNull(key, "null key"), root);
+	}
+	
+	/**
+	 * Стандартный двоичный поиск в дереве по ключу
+	 * @param key	Ключ поиска
+	 * @param node	Начальный корень
+	 * @return
+	 */
+	private V get(K key, BSNode node) {
+		while (node != null) {
+			int cmp = key.compareTo(node.key);
+			if (cmp < 0) node = node.left; else
+			if (cmp > 0) node = node.right; else
+			return node.value;
+		}
+		// Ключ не найден
+		return null;
+	}
 	
 	/**
 	 * "Красивая" печать дерева.
@@ -88,34 +115,5 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 			print(node.left, indent + 2);
 			print(node.right, indent + 2);
 		}
-	}
-
-	/**
-	 * Поиск в дереве по ключу.
-	 * @param key ключ поиска.
-	 * @return найденное значение или null, если такого ключа нет в дереве.
-	 */
-	public V get(K key) {
-		// Проверка: ключ поиска не должен быть пустым.
-		if (key == null) throw new NullPointerException("null key");
-
-		return get(key, root);
-	}
-	
-	/**
-	 * Стандартный двоичный поиск в дереве по ключу
-	 * @param key	Ключ поиска
-	 * @param node	Начальный корень
-	 * @return
-	 */
-	private V get(K key, BSNode node) {
-		while (node != null) {
-			int cmp = key.compareTo(node.key);
-			if (cmp < 0) node = node.left; else
-			if (cmp > 0) node = node.right; else
-			return node.value;
-		}
-		// Ключ не найден
-		return null;
 	}
 }

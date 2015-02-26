@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 
 /**
  * Реализация основных операций АВЛ-дерева. В узлах дерева хранятся высоты
@@ -52,10 +54,8 @@ public class AVLTreeH<K extends Comparable<K>, V> extends BSTree<K, V> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public V put(K key, V value) {
-		// Проверка: ключ поиска не должен быть пустым.
-		if (key == null) throw new NullPointerException("null key");
-
-		V oldValue = get(key);
+		// Вызов рекурсивной функции с проверкой: ключ поиска не должен быть пустым.
+		V oldValue = get(Objects.requireNonNull(key, "null key"));
 		root = put(key, value, (Node)root);
 		return oldValue;
 	}
@@ -64,9 +64,7 @@ public class AVLTreeH<K extends Comparable<K>, V> extends BSTree<K, V> {
 	@Override
 	public V remove(K key) {
 		// Проверка: ключ поиска не должен быть пустым.
-		if (key == null) throw new NullPointerException("null key");
-
-		V oldValue = get(key);
+		V oldValue = get(Objects.requireNonNull(key, "null key"));
 		root = remove(key, (Node)root);
 		return oldValue;
 	}

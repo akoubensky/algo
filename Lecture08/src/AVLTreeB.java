@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 
 /**
  * Реализация основных операций АВЛ-дерева. В узлах дерева хранятся показатели
@@ -22,20 +24,7 @@ public class AVLTreeB<K extends Comparable<K>, V> extends BSTree<K, V> {
 	 */
 	private class Node extends BSNode {
 		// Показатель сбалансированности узла:
-		short balance;
-
-		/**
-		 * Конструктор произвольного узла.
-		 * @param key ключ
-		 * @param value значение
-		 * @param balance показатель сбалансированности узла
-		 * @param left левое поддерево
-		 * @param right правое поддерево
-		 */
-		Node(K key, V value, short balance, Node left, Node right) {
-			super(key, value, left, right);
-			this.balance = balance;
-		}
+		byte balance;
 
 		/**
 		 * Конструктор листа.
@@ -77,7 +66,7 @@ public class AVLTreeB<K extends Comparable<K>, V> extends BSTree<K, V> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public V put(K key, V value) {
-		RetValue retVal = put(key, value, (Node)root);
+		RetValue retVal = put(Objects.requireNonNull(key, "null key"), value, (Node)root);
 		root = retVal.node;
 		return retVal.oldValue;
 	}
@@ -85,7 +74,7 @@ public class AVLTreeB<K extends Comparable<K>, V> extends BSTree<K, V> {
 	@SuppressWarnings("unchecked")
 	@Override
 	public V remove(K key) {
-		RetValue retVal = remove(key, (Node)root);
+		RetValue retVal = remove(Objects.requireNonNull(key, "null key"), (Node)root);
 		root = retVal.node;
 		return retVal.oldValue;
 	}
@@ -289,8 +278,8 @@ public class AVLTreeB<K extends Comparable<K>, V> extends BSTree<K, V> {
 		short b2 = child.balance;
 		short cb2 = (short)Math.max(b2, 0);
 		
-		node.balance = (short)(cb2 + 1 + b1 - b2);
-		child.balance = (short)(Math.max(cb2 + 1 + b1, b2) + 1);
+		node.balance = (byte)(cb2 + 1 + b1 - b2);
+		child.balance = (byte)(Math.max(cb2 + 1 + b1, b2) + 1);
 		
 		return child;
 	}
@@ -313,8 +302,8 @@ public class AVLTreeB<K extends Comparable<K>, V> extends BSTree<K, V> {
 		short b2 = child.balance;
 		short cb2 = (short)Math.max(b2, 0);
 		
-		node.balance = (short)(b1 - 1 - cb2);
-		child.balance = (short)(b2 - Math.max(0, cb2 + 1 - b1) - 1);
+		node.balance = (byte)(b1 - 1 - cb2);
+		child.balance = (byte)(b2 - Math.max(0, cb2 + 1 - b1) - 1);
 		
 		return child;
 	}

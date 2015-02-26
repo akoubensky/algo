@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.Objects;
 
 
 public abstract class BSTree<K extends Comparable<K>, V> {
@@ -63,28 +64,30 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 	// Корень дерева.
 	BSNode root = null;
 
-
 	/**
 	 * Поиск в дереве по ключу.
 	 * @param key ключ поиска.
 	 * @return найденное значение или null, если такого ключа нет в дереве.
 	 */
 	public V get(K key) {
-		// Проверка: ключ поиска не должен быть пустым.
-		if (key == null) throw new NullPointerException("null key");
-
-		// Проход по дереву от корня до искомого узла.
-		BSNode current = root;
-		while (current != null) {
-			if (key.compareTo(current.key) == 0) {
-				return current.value;
-			} else if (key.compareTo(current.key) < 0) {
-				current = current.left;
-			} else {
-				current = current.right;
-			}
+		// Вызов рекурсивной функции с проверкой: ключ поиска не должен быть пустым.
+		return get(Objects.requireNonNull(key, "null key"), root);
+	}
+	
+	/**
+	 * Стандартный двоичный поиск в дереве по ключу
+	 * @param key	Ключ поиска
+	 * @param node	Начальный корень
+	 * @return
+	 */
+	private V get(K key, BSNode node) {
+		while (node != null) {
+			int cmp = key.compareTo(node.key);
+			if (cmp < 0) node = node.left; else
+			if (cmp > 0) node = node.right; else
+			return node.value;
 		}
-		// Ключ не найден.
+		// Ключ не найден
 		return null;
 	}
 

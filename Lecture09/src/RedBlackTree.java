@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 
 /**
  * Реализация основных операции красно-черного дерева -
@@ -67,15 +69,10 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 	 */
 	@SuppressWarnings("unchecked")
 	public V put(K key, V value) {
-		assert root == null || root instanceof RedBlackTree.Node;
-		
-		// Проверка: ключ поиска не должен быть пустым.
-		if (key == null) throw new NullPointerException("null key");
-
 		// Заготовим объект, в который можно записать старое значение
 		BSNode found = new BSNode(null, null);
 		// Выполняем вставку с запоминанием старого значения
-		root = put(key, value, (Node)root, found);
+		root = put(Objects.requireNonNull(key, "null key"), value, (Node)root, found);
 		// После вставки корень дерева может оказаться красным - перекрасим его.
 		((Node)root).color = Color.BLACK;
 		// Возвращаем старое значение
@@ -104,7 +101,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 			((Node)root).color = Color.RED;
 		}
 		// Выполняем удаление с запоминанием старого значения
-		root = remove(key, (Node)root, found);
+		root = remove(Objects.requireNonNull(key, "null key"), (Node)root, found);
 		// После удаления корень дерева может оказаться красным - перекрасим его.
 		if (isRed((Node)root)) ((Node)root).color = Color.BLACK;
 		// Возвращаем старое значение
