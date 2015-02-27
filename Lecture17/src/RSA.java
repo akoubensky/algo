@@ -38,7 +38,9 @@ public class RSA {
 		int q = primes.get(2);
 		while (p == q || p*q < base) q = primes.get(++lower);
 		int m = (p-1) * (q-1);
-		int d = primes.get(random.nextInt(7) + 2);
+		int ndx = random.nextInt(7) + 2;
+		int d = primes.get(ndx);
+		while (m % d == 0) d = primes.get(++ndx);
 		int e = (int)inverse(d, m);
 		openKey = new Key(p*q, d);
 		closeKey = new Key(p*q, e);
@@ -168,7 +170,7 @@ public class RSA {
 
 
 	public static void main(String[] args) {
-		RSA coder = new RSA(1 << 10);
+		RSA coder = new RSA(1 << 16);
 		String message = "Lucy in the sky with diamonds";
 		int size = message.length();
 		int[] intMessage = new int[size];
