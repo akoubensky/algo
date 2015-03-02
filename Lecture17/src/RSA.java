@@ -36,7 +36,11 @@ public class RSA {
 		int q = primes.get(2);
 		while (p == q || p*q < base) q = primes.get(++lower);
 		int m = (p-1) * (q-1);
-		int d = primes.get(random.nextInt(7) + 2);
+		int index = random.nextInt(6) + 1;
+		int d = primes.get(index);
+		while (m % d == 0) {
+			d = primes.get(++index);
+		}
 		int e = (int)inverse(d, m);
 		openKey = new Key(p*q, d);
 		closeKey = new Key(p*q, e);
