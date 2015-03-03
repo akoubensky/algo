@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -38,9 +36,11 @@ public class RSA {
 		int q = primes.get(2);
 		while (p == q || p*q < base) q = primes.get(++lower);
 		int m = (p-1) * (q-1);
-		int ndx = random.nextInt(7) + 2;
-		int d = primes.get(ndx);
-		while (m % d == 0) d = primes.get(++ndx);
+		int index = random.nextInt(6) + 1;
+		int d = primes.get(index);
+		while (m % d == 0) {
+			d = primes.get(++index);
+		}
 		int e = (int)inverse(d, m);
 		openKey = new Key(p*q, d);
 		closeKey = new Key(p*q, e);
