@@ -1,7 +1,8 @@
 package dijkstra;
 
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Реализация алгоритма Дейкстры поиска минимальных путей в графе
@@ -34,29 +35,49 @@ public class Dijkstra {
 	/**
 	 * Выдает дерево минимальных путей.
 	 * Если дерево еще не построено, запускается алгоритм Дейкстры.
-	 * @param u	Номер исходной вершины
-	 * @return	Дерево в виде массива обратных дуг
+	 * @param from	Номер исходной вершины
+	 * @return		Дерево в виде массива обратных дуг
 	 */
-	public int[] getTree(int u) {
-		if (u < 0 || u >= nVert) return null;
-		if (u != src) {
-			dijkstra(src = u);
-		}
+	public int[] getTree(int from) {
+		if (from < 0 || from >= nVert) return null;
+		// Был ли запущен алгоритм Дейкстры из заданной начальной вершины?
+		checkStart(from);
 		return tree;
 	}
 	
 	/**
 	 * Выдает длины минимальных путей.
 	 * Если дерево еще не построено, запускается алгоритм Дейкстры.
-	 * @param u	Номер исходной вершины
-	 * @return	Массив расстояний до указанных вершин
+	 * @param from	Номер исходной вершины
+	 * @return		Массив расстояний до указанных вершин
 	 */
-	public double[] getDistances(int u) {
-		if (u < 0 || u >= nVert) return null;
-		if (u != src) {
-			dijkstra(u);
-		}
+	public double[] getDistances(int from) {
+		if (from < 0 || from >= nVert) return null;
+		// Был ли запущен алгоритм Дейкстры из заданной начальной вершины?
+		checkStart(from);
 		return distances;
+	}
+	
+	/**
+	 * Выдает кратчайший путь между двумя вершитнами.
+	 * @param from	Номер начальной вершины.
+	 * @param to	Номер конечной вершины.
+	 * @return		Список вершин на пути от начальной вершины к конечной.
+	 */
+	public List<Integer> getPath(int from, int to) {
+		if (from < 0 || from >= nVert || to < 0 || to >= nVert) return null;
+		// Был ли запущен алгоритм Дейкстры из заданной начальной вершины?
+		checkStart(from);
+		if (distances[to] == Integer.MAX_VALUE) {
+			return null;
+		} else {
+			LinkedList<Integer> path = new LinkedList<>();
+			path.add(to);
+			while (tree[to] != -1) {
+				path.addFirst(to = tree[to]);
+			}
+			return path;
+		}
 	}
 	
 	/**
@@ -84,8 +105,7 @@ public class Dijkstra {
 			int vert = extractHeap();
 			
 			// Производим релаксацию дуг, ведущих из выбранной вершины
-			for (Iterator<Graph.Arc> iArc = graph.arcs(vert); iArc.hasNext(); ) {
-				Graph.Arc arc = iArc.next();
+			for (Graph.Arc arc : graph.arcs(vert)) {
 				int end = arc.to();
 				double newDist = distances[vert] + arc.weight;
 				if (distances[end] <= newDist) continue;
@@ -102,6 +122,17 @@ public class Dijkstra {
 	}
 	
 	//--------------------- PRIVATE ---------------------
+	
+	/**
+	 * Проверка, был ли запущен алгоритм Дейкстры из заданной начальной вершины.
+	 * Если нет - алгоритм запускается.
+	 * @param from	Исходная вершина.
+	 */
+	private void checkStart(int from) {
+		if (from != src) {
+			dijkstra(from);
+		}
+	}
 
 	/**
 	 * Изменение позиции элемента в куче в соответствии с изменившимся
@@ -185,7 +216,10 @@ public class Dijkstra {
 		g.addArc(3, 8, 4); g.addArc(8, 3, 4);
 		
 		Dijkstra dijkstra = new Dijkstra(g);
-		System.out.println("Tree: " + Arrays.toString(dijkstra.getTree(9)));
-		System.out.println("Dist: " + Arrays.toString(dijkstra.getDistances(9)));
+		int source = 9;
+		int dest = 8;
+		System.out.println("Distances from " + source + ": " + Arrays.toString(dijkstra.getDistances(source)));
+		System.out.println("SP tree from " + source + ": " + Arrays.toString(dijkstra.getTree(source)));
+		System.out.println("Shortest path from " + source + " to " + dest + ": " + dijkstra.getPath(source, dest));
 	}
 }

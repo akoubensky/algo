@@ -1,7 +1,6 @@
 package dijkstra;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -65,7 +64,7 @@ public class Graph {
 	 * @param u	Исходная вершина
 	 * @return
 	 */
-	public Iterator<Arc> arcs(int u) {
-		return lGraph[u].iterator();
+	public Iterable<Arc> arcs(int u) {
+		return lGraph[u];
 	}
 }
