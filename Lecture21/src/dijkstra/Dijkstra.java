@@ -10,44 +10,6 @@ import java.util.Iterator;
  * двоичной куче.
  */
 public class Dijkstra {
-	/**
-	 * Пара из номера вершины и растояния до нее - элемент кучи.
-	 * Сравнение пар производится по расстояниям.
-	 */
-	private static class Pair implements Comparable<Pair> {
-		int vertex;			// Номер вершины
-		double distance;	// Расстояние до нее
-		
-		public Pair(int v, double d) {
-			vertex = v;
-			distance = d;
-		}
-		
-		@Override
-		public int compareTo(Pair p) {
-			return 
-				distance < p.distance ? -1 :
-				distance == p.distance ? vertex - p.vertex : 1;
-		}
-		
-		@Override
-		public boolean equals(Object o) {
-			if (o == null && !(o instanceof Pair)) return false;
-			Pair sndPair = (Pair)o;
-			return vertex == sndPair.vertex && distance == sndPair.distance;
-		}
-		
-		@Override
-		public int hashCode() {
-			return vertex ^ new Double(distance).hashCode();
-		}
-		
-		@Override
-		public String toString() {
-			return "(" + vertex + "," + distance + ")";
-		}
-	}
-	
 	final Graph graph;		// Граф, для которого производятся вычисления
 	
 	int src = -1;			// Начальная вершина, пути из которой анализируются
@@ -57,9 +19,8 @@ public class Dijkstra {
 	int[] tree;				// Дерево обхода по минимальным путям
 	
 	int[] positions;		// Индексы вершин в куче		
-	Pair[] binHeap;			// Двоичная куча
+	int[] binHeap;			// Двоичная куча
 	int heapSize = 0;		// Размер кучи
-	boolean[] passed;		// Массив пройденных вершин
 	
 	public Dijkstra(Graph g) {
 		graph = g;
@@ -67,8 +28,7 @@ public class Dijkstra {
 		distances = new double[nVert];
 		tree = new int[nVert];
 		positions = new int[nVert];
-		binHeap = new Pair[nVert];
-		passed = new boolean[nVert];
+		binHeap = new int[nVert];
 	}
 	
 	/**
@@ -112,41 +72,31 @@ public class Dijkstra {
 			distances[i] = Double.POSITIVE_INFINITY;
 			tree[i] = -1;
 			positions[i] = -1;
-			passed[i] = false;
 		}
 		distances[s] = 0;
 		
 		// Инициализация кучи
-		clearHeap();
-		addToHeap(new Pair(s,0));
+		heapSize = 1;
+		binHeap[0] = s;
 		
-		while (!emptyHeap()) {
+		while (heapSize > 0) {
 			// Жадный алгоритм выбирает ближайшую вершину
-			Pair minPair = extractHeap();
-			int vert = minPair.vertex;
-			passed[vert] = true;
+			int vert = extractHeap();
 			
 			// Производим релаксацию дуг, ведущих из выбранной вершины
 			for (Iterator<Graph.Arc> iArc = graph.arcs(vert); iArc.hasNext(); ) {
 				Graph.Arc arc = iArc.next();
 				int end = arc.to();
-				if (!passed[end]) {
-					double newDist = distances[vert] + arc.weight;
-					if (positions[end] == -1) {
-						// Новая вершина - добавляем в кучу
-						addToHeap(new Pair(end, newDist));
-						tree[end] = vert;
-						distances[end] = newDist;
-					} else {
-						// Вершина уже была в куче, производим ее релаксацию.
-						Pair p = getFromHeap(positions[end]);
-						if (newDist < p.distance) {
-							changeHeap(positions[end], newDist);
-							tree[end] = vert;
-							distances[end] = newDist;
-						}
-					}
+				double newDist = distances[vert] + arc.weight;
+				if (distances[end] <= newDist) continue;
+				tree[end] = vert;
+				distances[end] = newDist;
+				if (positions[end] == -1) {
+					// Новая вершина - добавляем в кучу
+					binHeap[heapSize] = end;
+					positions[end] = heapSize++;
 				}
+				updatePrio(positions[end]);
 			}
 		}
 	}
@@ -154,82 +104,37 @@ public class Dijkstra {
 	//--------------------- PRIVATE ---------------------
 
 	/**
-	 * Изхменение позиции элемента в куче в соответствии с изменившимся
+	 * Изменение позиции элемента в куче в соответствии с изменившимся
 	 * (уменьшившимся) расстоянием до нее.
 	 * @param i			Позиция элемента в куче
-	 * @param newDist	Новое расстояние
 	 */
-	private void changeHeap(int i, double newDist) {
-		binHeap[i].distance = newDist;
-		heapUp(i);
-	}
-
-	/**
-	 * Доступ к элементу кучи по индексу.
-	 * @param i	Индекс элемента
-	 * @return
-	 */
-	private Pair getFromHeap(int i) {
-		return binHeap[i];
+	private void updatePrio(int i) {
+		int vert = binHeap[i];
+		int pred = (i - 1) / 2;
+		while (pred >= 0 && distances[vert] < distances[binHeap[pred]]) {
+			positions[binHeap[pred]] = i;
+			binHeap[i] = binHeap[pred];
+			i = pred;
+			if (pred == 0) break;
+			pred = (i - 1) / 2;
+		}
+		binHeap[i] = vert;
+		positions[vert] = i;
 	}
 
 	/**
 	 * Извлечение из кучи элемента с минимальным расстоянием до него.
 	 * @return	Элемент с наивысшим приоритетом (наименьшим расстоянием).
 	 */
-	private Pair extractHeap() {
-		Pair minPair = binHeap[0];
-		positions[minPair.vertex] = -1;
+	private int extractHeap() {
+		int minVert = binHeap[0];
+		positions[minVert] = -1;
 		if (--heapSize > 0) {
 			binHeap[0] = binHeap[heapSize];
-			binHeap[heapSize] = null;
-			positions[binHeap[0].vertex] = 0;
+			positions[binHeap[0]] = 0;
 			heapDown(0);
 		}
-		return minPair;
-	}
-
-	/**
-	 * Добавление нового элемента в кучу.
-	 * @param pair	Новый элемент
-	 */
-	private void addToHeap(Pair pair) {
-		binHeap[positions[pair.vertex] = heapSize] = pair;
-		heapUp(heapSize++);
-	}
-
-	/**
-	 * Очистка кучи.
-	 */
-	private void clearHeap() {
-		for (int i = 0; i < heapSize; ++i) binHeap[i] = null;
-		heapSize = 0;
-	}
-
-	/**
-	 * Проверка, пуста ли куча.
-	 * @return
-	 */
-	private boolean emptyHeap() {
-		return heapSize == 0;
-	}
-
-	/**
-	 * Протаскивание элемента кучи с заданным индексом вверх по куче
-	 * @param i	Индекс элемента
-	 */
-	private void heapUp(int i) {
-		Pair pair = binHeap[i];
-		int pred = (i - 1) / 2;
-		while (pred >= 0 && pair.compareTo(binHeap[pred]) < 0) {
-			positions[binHeap[pred].vertex] = i;
-			binHeap[i] = binHeap[pred];
-			i = pred;
-			if (pred == 0) break;
-			pred = (i - 1) / 2;
-		}
-		positions[pair.vertex] = i;
-		binHeap[i] = pair;
+		return minVert;
 	}
 
 	/**
@@ -237,21 +142,21 @@ public class Dijkstra {
 	 * @param i	Индекс элемента
 	 */
 	private void heapDown(int i) {
-		Pair pair = binHeap[i];
+		int pair = binHeap[i];
 		int next = 2 * i + 1;
 		while (next < heapSize) {
-			if (next + 1 < heapSize && binHeap[next+1].compareTo(binHeap[next]) < 0) {
+			if (next + 1 < heapSize && distances[binHeap[next+1]] < distances[binHeap[next]]) {
 				next++;
 			}
-			if (pair.compareTo(binHeap[next]) <= 0) {
+			if (distances[pair] <= distances[binHeap[next]]) {
 				break;
 			}
-			positions[binHeap[next].vertex] = i;
+			positions[binHeap[next]] = i;
 			binHeap[i] = binHeap[next];
 			i = next;
 			next = 2 * i + 1;
 		}
-		positions[pair.vertex] = i;
+		positions[pair] = i;
 		binHeap[i] = pair;
 	}
 	
