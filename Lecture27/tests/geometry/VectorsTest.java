@@ -7,17 +7,29 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 
+/**
+ * Проверка некоторых операций вычислительной геометрии с векторами.
+ */
 public class VectorsTest {
-    private List<Vector> vectors = Arrays.asList(
+    private List<Vector> vectorsSet1 = Arrays.asList(
             new Vector("1", new Point(1,4), new Point(4,7)),
             new Vector("2", new Point(11,5), new Point(5,6)),
             new Vector("3", new Point(1,1), new Point(5,7)),
             new Vector("4", new Point(3,5), new Point(6,5)),
-            new Vector("5", new Point(5,4), new Point(7,5)),
+            new Vector("5", new Point(7,5), new Point(5,4)),
             new Vector("6", new Point(5,3), new Point(8,5)),
             new Vector("7", new Point(4,2), new Point(4,4)),
-            new Vector("8", new Point(3,1), new Point(7,3)),
+            new Vector("8", new Point(7,3), new Point(3,1)),
             new Vector("9", new Point(10,1), new Point(8,2))
+    );
+
+    private List<Vector> vectorsSet2 = Arrays.asList(
+            new Vector("1", new Point(7,4), new Point(3,10)),
+            new Vector("2", new Point(7,3), new Point(4,8)),
+            new Vector("3", new Point(5,4), new Point(6,0)),
+            new Vector("4", new Point(3,2), new Point(5,5)),
+            new Vector("5", new Point(2,1), new Point(4,7)),
+            new Vector("6", new Point(3,6), new Point(2,9))
     );
 
     @Test
@@ -90,10 +102,19 @@ public class VectorsTest {
         Vector v51 = new Vector(new Point(2, 2));
         Vector v52 = new Vector(new Point(1, 1), new Point(2, 0));
         assertTrue("Vectors intersection", Vectors.areVectorsIntersect(v51, v52));
+        Vector v61 = new Vector(new Point(7, 4), new Point(3, 10));
+        Vector v62 = new Vector(new Point(7, 3), new Point(4, 8));
+        assertFalse("Vectors intersection", Vectors.areVectorsIntersect(v61, v62));
     }
 
     @Test
     public void hasIntersections() {
-        assertTrue("has intersection", Vectors.hasIntersections(vectors));
+    	Pair<Vector, Vector> pair = Vectors.hasIntersections(vectorsSet1);
+        assertNotNull("has intersection", pair);
+        assertTrue("wrong vectors intersection", 
+        		(pair.getFirst().getName().equals("3") && pair.getSecond().getName().equals("4")) ||
+        		(pair.getFirst().getName().equals("4") && pair.getSecond().getName().equals("3")));
+        pair = Vectors.hasIntersections(vectorsSet2);
+        assertNull("has intersection", pair);
     }
 }

@@ -1,7 +1,7 @@
 package geometry;
 
 /**
- * Created by akubensk on 05.05.2015.
+ * Пара из двух значений заданных типов
  */
 public class Pair<V1, V2> {
     private V1 first;
