@@ -20,9 +20,6 @@ import java.util.Stack;
 class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	/**
 	 * Реализация узла дерева (без ссылки на родительский узел)
-	 *
-	 * @param <K> Тип ключа
-	 * @param <V> Тип хранимого значения
 	 */
 	private class Node {
 		K key;
@@ -286,12 +283,9 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	 * Реализация итератора двоичного дерева с помощью стека.
 	 * В общем случае задаются "границы итерации" - минимальное и максимальное 
 	 * значения (максимальное при этом не входит в диапазон итерации)
-	 *
-	 * @param <K> Тип ключа
-	 * @param <V> Тип значения
 	 */
 	private class StackTreeIterator implements Iterator<V> {
-		Stack<Node> stack = new Stack<Node>();
+		Stack<Node> stack = new Stack<>();
 		K to;
 
 		/**
@@ -325,17 +319,11 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 			return element;
 		}
 	  
-		@Override
-		public void remove() {
-			// Удаление узла разрушит структуру стека, поэтому операция не реализована
-			throw new UnsupportedOperationException(); 
-		}
-		
 		/**
-		 * Поиск минимального ключа в дереве, большего или равного заданному (если задано)
-		 * @param node
-		 * @param key
-		 * @return
+		 * Поиск минимального ключа в дереве, большего или равного заданному (если задано).
+		 * Узлы, находящиеся на пути поиска, добавляются в стек.
+		 * @param node  Начальный узел для поиска
+		 * @param key   Ключ поиска
 		 */
 		private void toStack(Node node, K key) {
 			if (node == null) {
@@ -368,7 +356,7 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	 * @param keys Весь упорядоченный массив ключей
 	 * @param begin начальный индекс в массиве
 	 * @param end конечный индекс в массиве
-	 * @return
+	 * @return  Корневой узел построенного дерева.
 	 */
 	private static <K extends Comparable<K>, V> BinSearchTree<K, V>.Node
 			buildOptimalTree(BinSearchTree<K, V> t, K[] keys, int begin, int end) {
@@ -386,11 +374,11 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 	
 	/**
 	 * Тестирование некоторых функций
-	 * @param args
+	 * @param args Не используется
 	 */
 	public static void main(String[] args) {
 		// Построение дерева с произвольно взятым набором ключей
-		BinSearchTree<Integer, String> tree = new BinSearchTree<Integer, String>();
+		BinSearchTree<Integer, String> tree = new BinSearchTree<>();
 		
 		int[] keys = {6, 3, 9, 2, 5, 7, 10, 1, 8};
 		String[] values = {"six", "three", "nine", "two", "five", "seven", "ten", "one", "eight"};
