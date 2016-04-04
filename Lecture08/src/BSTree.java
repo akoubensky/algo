@@ -39,7 +39,6 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 		 * Конструктор произвольного узла.
 		 * @param key ключ
 		 * @param value значение
-		 * @param balance показатель сбалансированности узла
 		 * @param left левое поддерево
 		 * @param right правое поддерево
 		 */
