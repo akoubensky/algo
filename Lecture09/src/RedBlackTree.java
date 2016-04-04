@@ -18,8 +18,8 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 	/**
 	 * Цвет узлов дерева
 	 */
-	private static enum Color {
-		RED, BLACK;
+	private enum Color {
+		RED, BLACK
 	}
 
 	/**
@@ -41,9 +41,6 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 		 */
 		Node(K key, V value, Color color, Node left, Node right) {
 			super(key, value, left, right);
-			assert (left == null || left instanceof RedBlackTree.Node) &&
-				   (right == null || right instanceof RedBlackTree.Node);
-
 			this.color = color;
 		}
 
@@ -114,10 +111,10 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 	
 	/**
 	 * Вставка в дерево новой ассоциативной пары.
-	 * @param key
-	 * @param value
-	 * @param node
-	 * @return
+	 * @param key   Ключ
+	 * @param value Значение
+	 * @param node  Корень поддерева, в которое вставляется пара.
+	 * @return      Корень модифицированного поддерева
 	 */
 	@SuppressWarnings("unchecked")
 	private Node put(K key, V value, Node node, BSNode found) {
@@ -162,6 +159,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 	 * что либо корень поддерева, либо его левый потомок - красные.
 	 * @param key	Заданный ключ
 	 * @param node	Корень заданного поддерева
+     * @param found Узел для сохранения удаленного значения
 	 * @return		Модифицированное поддерево
 	 */
 	@SuppressWarnings("unchecked")
@@ -177,7 +175,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
         	// Удаляем из правого поддерева или корня
             if (isRed((Node)node.left)) {
             	// Делаем левый потомок черным
-            	node = pivotRight((Node)node);
+            	node = pivotRight(node);
             }
             if (key.compareTo(node.key) == 0 && node.right == null) {
             	// Удаляется корень поддерева, который заведомо является листом.
@@ -385,7 +383,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 	 * @param args не используется.
 	 */
 	public static void main(String[] args) {
-		RedBlackTree<Integer, Integer> tree = new RedBlackTree<Integer, Integer>();
+		RedBlackTree<Integer, Integer> tree = new RedBlackTree<>();
 		int[] keys = { 10, 6, 14, 2, 8, 12, 17, 15, 19 };
 		
 		// Вставляем элементы в дерево
@@ -395,6 +393,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 			tree.print();
 			System.out.println("----------------------------");
 		}
+		System.out.format("Key: %d, value: %d", 7, tree.get(7));
 		
 		// Заменяем все элементы на новые
 		for (int key : keys) {

@@ -77,7 +77,7 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 	 * Стандартный двоичный поиск в дереве по ключу
 	 * @param key	Ключ поиска
 	 * @param node	Начальный корень
-	 * @return
+	 * @return		Результат поиска
 	 */
 	private V get(K key, BSNode node) {
 		while (node != null) {
