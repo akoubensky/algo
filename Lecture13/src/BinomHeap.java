@@ -1,4 +1,4 @@
-﻿import java.util.Comparator;
+import java.util.Comparator;
 import java.util.Iterator;
 
 /**
@@ -13,7 +13,6 @@ import java.util.Iterator;
  * - removeNode(node) Удаление узла.
  *
  * @param <K> Тип ключей.
- * @param <V> Тип информационного поля.
  */
 public class BinomHeap<K extends Comparable<K>> {
 	/**
@@ -241,7 +240,7 @@ public class BinomHeap<K extends Comparable<K>> {
 	 * @param key Ключ нового узла.
 	 */
 	public void add(K key) {
-		Node<K> newNode = new Node<K>(key);
+		Node<K> newNode = new Node<>(key);
 		newNode.brother = head;
 		head = newNode;
 		size++;
@@ -465,20 +464,16 @@ public class BinomHeap<K extends Comparable<K>> {
 		// Заданный набор из 13 ключей.
 		int[] keys = { 10, 1, 12, 25, 18, 6, 8, 14, 29, 11, 17, 38, 27 };
 		// "Обратный" компаратор - приоритет будет тем выше, чем значение меньше.
-		Comparator<Integer> reversedComparator = new Comparator<Integer>() {
-			public int compare(Integer o1, Integer o2) {
-				return o2.compareTo(o1);
-			}
-		};
+		Comparator<Integer> reversedComparator = Comparator.reverseOrder();
 
 		// Создаем кучу из первых 6 узлов.
-		BinomHeap<Integer> t1 = new BinomHeap<Integer>(reversedComparator);
+		BinomHeap<Integer> t1 = new BinomHeap<>(reversedComparator);
 		for (int i = 0; i < 6; ++i) {
 			t1.add(keys[i]);
 		}
 
 		// Создаем кучу из следующих 7 узлов.
-		BinomHeap<Integer> t2 = new BinomHeap<Integer>(reversedComparator);
+		BinomHeap<Integer> t2 = new BinomHeap<>(reversedComparator);
 		for (int i = 6; i < 13; ++i) {
 			t2.add(keys[i]);
 		}
