@@ -60,7 +60,7 @@ public class MedianHeap<P extends Comparable<P>> {
 			throw new IllegalStateException("Cannot extract median from an empty heap");
 		}
 		// Медиана находится на вершине левой кучи.
-		return left.getBest(); 
+		return left.peek();
 	}
 	
 	/**
@@ -72,7 +72,7 @@ public class MedianHeap<P extends Comparable<P>> {
 			throw new IllegalStateException("Cannot extract median from an empty heap");
 		}
 		// Медиана находится на вершине левой кучи.
-		P result = left.retrieveBest();
+		P result = left.poll();
 		// Балансировка размеров куч, если нужно.
 		if (left.size() < right.size()) {
 			right2Left();
@@ -89,14 +89,14 @@ public class MedianHeap<P extends Comparable<P>> {
 		// Сначала элемент добавляем в одну из двух куч
 		// в соответствии с его величиной. Потом, возможно,
 		// необходимо провести балансировку размеров куч. 
-		if (isEmpty() || comparator.compare(item, left.getBest()) <= 0) {
-			left.add(item);
+		if (isEmpty() || comparator.compare(item, left.peek()) <= 0) {
+			left.offer(item);
 			// Балансировка размеров, если нужно.
 			if (left.size() > right.size() + 1) {
 				left2Right();
 			}
 		} else {
-			right.add(item);
+			right.offer(item);
 			// Балансировка размеров, если нужно.
 			if (left.size() < right.size()) {
 				right2Left();
@@ -108,16 +108,16 @@ public class MedianHeap<P extends Comparable<P>> {
 	 * Перенос "лучшего" элемента из левой кучи в правую.
 	 */
 	private void left2Right() {
-		P best = left.retrieveBest();
-		right.add(best);
+		P best = left.poll();
+		right.offer(best);
 	}
 	
 	/**
 	 * Перенос "лучшего" элемента из правой кучи в левую.
 	 */
 	private void right2Left() {
-		P best = right.retrieveBest();
-		left.add(best);
+		P best = right.poll();
+		left.offer(best);
 	}
 	
 	/**
