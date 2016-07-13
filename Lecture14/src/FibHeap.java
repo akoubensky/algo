@@ -25,12 +25,7 @@ public class FibHeap<K extends Comparable<K>, V> {
 	/**
 	 * Компаратор, использующийся для сравнения ключей
 	 */
-	private Comparator<K> comparator =
-			new Comparator<K>() {
-		public int compare(K key1, K key2) {
-			return key1.compareTo(key2);
-		}
-	};
+	private Comparator<K> comparator = Comparator.naturalOrder();
 
 	/**
 	 * Класс, представляющий структуру узла кучи. Класс доступен
