@@ -21,9 +21,9 @@ public class SummIntervals implements Iterable<Integer>{
 	//-----------------------------------------------------
 	
 	/**
-	 * Конструктор получает исходный массив и нейтральное значение.
+	 * Конструктор получает исходный массив. Нейтральное значение
+	 * полагается равным нулю.
 	 * @param array Исходный массив
-	 * @param minimum Минимальное (нейтральное) значение
 	 */
 	public SummIntervals(Integer[] array) {
 		size = array.length;
