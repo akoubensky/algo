@@ -61,8 +61,8 @@ public class Fano {
 		if (to - from > 1) {
 			int m = median(p, from, to);
 			assert m > from && m < to;
-			for (int i = from; i < m; ++i) codes[i].append('0');
-			for (int i = m; i < to; ++i) codes[i].append('1');
+			for (int i = from; i < m; ++i) codes[i].append('1');
+			for (int i = m; i < to; ++i) codes[i].append('0');
 			fano(p, codes, from, m);
 			fano(p, codes, m, to);
 		}
@@ -73,7 +73,61 @@ public class Fano {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		double[] p = {0.20, 0.20, 0.19, 0.12, 0.11, 0.09, 0.09};
-		System.out.println(Arrays.toString(fano(p)));
+		double[] p = {
+				0.170724,
+				0.078881,
+				0.070544,
+				0.060655,
+				0.059827,
+				0.051694,
+				0.049189,
+				0.042626,
+				0.040116,
+				0.033812,
+				0.031054,
+				0.026809,
+				0.026179,
+				0.024958,
+				0.024288,
+				0.017939,
+				0.016610,
+				0.016492,
+				0.013447,
+				0.013363,
+				0.011635,
+				0.011089,
+				0.011010,
+				0.009451,
+				0.008511,
+				0.007441,
+				0.007317,
+				0.007182,
+				0.006496,
+				0.005404,
+				0.005302,
+				0.005201,
+				0.005038,
+				0.004525,
+				0.004373,
+				0.003805,
+				0.003692,
+				0.002550,
+				0.002510,
+				0.002336,
+				0.002100,
+				0.001030,
+				0.000642,
+				0.000557,
+				0.000411,
+				0.000411,
+				0.000388,
+				0.000265,
+				0.000124,
+				0.000000
+		};
+		String[] res = fano(p);
+        for (String s : res) {
+            System.out.println(s);
+        }
 	}
 }

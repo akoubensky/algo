@@ -33,6 +33,7 @@ local.properties
 ## IntelliJ IDEA
 #################
 
+.idea
 *.iml
 
 #################
