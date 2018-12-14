@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/08.AATree/AATree.iml" filepath="$PROJECT_DIR$/08.AATree/AATree.iml" />
+      <module fileurl="file://$PROJECT_DIR$/06.AVLTree/AVLTree.iml" filepath="$PROJECT_DIR$/06.AVLTree/AVLTree.iml" />
+      <module fileurl="file://$PROJECT_DIR$/01.ArraySorts/ArraySorts.iml" filepath="$PROJECT_DIR$/01.ArraySorts/ArraySorts.iml" />
+      <module fileurl="file://$PROJECT_DIR$/04.BinTree/BinTree.iml" filepath="$PROJECT_DIR$/04.BinTree/BinTree.iml" />
+      <module fileurl="file://$PROJECT_DIR$/10.BinomialHeap/BinomialHeap.iml" filepath="$PROJECT_DIR$/10.BinomialHeap/BinomialHeap.iml" />
+      <module fileurl="file://$PROJECT_DIR$/13.FanoHuffman/FanoHuffman.iml" filepath="$PROJECT_DIR$/13.FanoHuffman/FanoHuffman.iml" />
+      <module fileurl="file://$PROJECT_DIR$/11.FibonacciHeap/FibonacciHeap.iml" filepath="$PROJECT_DIR$/11.FibonacciHeap/FibonacciHeap.iml" />
+      <module fileurl="file://$PROJECT_DIR$/17.FloydWarshall/FloydWarshall.iml" filepath="$PROJECT_DIR$/17.FloydWarshall/FloydWarshall.iml" />
+      <module fileurl="file://$PROJECT_DIR$/22.Geometry/Geometry.iml" filepath="$PROJECT_DIR$/22.Geometry/Geometry.iml" />
+      <module fileurl="file://$PROJECT_DIR$/16.GraphMinPath/GraphMinPath.iml" filepath="$PROJECT_DIR$/16.GraphMinPath/GraphMinPath.iml" />
+      <module fileurl="file://$PROJECT_DIR$/15.GraphTraverse/GraphTraverse.iml" filepath="$PROJECT_DIR$/15.GraphTraverse/GraphTraverse.iml" />
+      <module fileurl="file://$PROJECT_DIR$/03.HashMaps/HashMaps.iml" filepath="$PROJECT_DIR$/03.HashMaps/HashMaps.iml" />
+      <module fileurl="file://$PROJECT_DIR$/09.Heap/Heap.iml" filepath="$PROJECT_DIR$/09.Heap/Heap.iml" />
+      <module fileurl="file://$PROJECT_DIR$/12.IntervalTree/IntervalTree.iml" filepath="$PROJECT_DIR$/12.IntervalTree/IntervalTree.iml" />
+      <module fileurl="file://$PROJECT_DIR$/21.KaratsubaFFT/KaratsubaFFT.iml" filepath="$PROJECT_DIR$/21.KaratsubaFFT/KaratsubaFFT.iml" />
+      <module fileurl="file://$PROJECT_DIR$/19.KruskalPrimEdmondsKarp/KruskalPrimEdmondsKarp.iml" filepath="$PROJECT_DIR$/19.KruskalPrimEdmondsKarp/KruskalPrimEdmondsKarp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/20.Nets/Nets.iml" filepath="$PROJECT_DIR$/20.Nets/Nets.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Projects.iml" filepath="$PROJECT_DIR$/.idea/Projects.iml" />
+      <module fileurl="file://$PROJECT_DIR$/14.RSA&amp;GrayCode/RSA&amp;GrayCode.iml" filepath="$PROJECT_DIR$/14.RSA&amp;GrayCode/RSA&amp;GrayCode.iml" />
+      <module fileurl="file://$PROJECT_DIR$/07.RedBlackTree/RedBlackTree.iml" filepath="$PROJECT_DIR$/07.RedBlackTree/RedBlackTree.iml" />
+      <module fileurl="file://$PROJECT_DIR$/05.SearchTree/SearchTree.iml" filepath="$PROJECT_DIR$/05.SearchTree/SearchTree.iml" />
+      <module fileurl="file://$PROJECT_DIR$/02.Stacks/Stacks.iml" filepath="$PROJECT_DIR$/02.Stacks/Stacks.iml" />
+      <module fileurl="file://$PROJECT_DIR$/18.StrongConnected/StrongConnected.iml" filepath="$PROJECT_DIR$/18.StrongConnected/StrongConnected.iml" />
+    </modules>
+  </component>
+</project>

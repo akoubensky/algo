@@ -1,6 +1,4 @@
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Stack;
+import java.util.*;
 
 
 /**
@@ -61,7 +59,7 @@ public class Graph<W extends Number> implements Iterable<Integer> {
 			}
 		}
 	}
-	
+
 	/**
 	 * Добавление дуги в граф. Предполагается, что ранее такой дуги в графе не было.
 	 * @param from	Начало дуги (номер вершины)
@@ -71,42 +69,85 @@ public class Graph<W extends Number> implements Iterable<Integer> {
 	public void addArc(int from, int to, W info) {
 		assert from < nVertex && from >= 0;
 		assert to < nVertex && to >= 0;
-		
+
 		lGraph[from] = new Arc<W>(to, info, lGraph[from]);
 	}
-	
+
+	/**
+	 * Добавление ребра в граф. Предполагается, что ранее такого ребра в графе не было.
+	 * @param from	Один конец ребра (номер вершины)
+	 * @param to	Другой конец ребра (номер вершины)
+	 * @param info	Нагрузка на ребро
+	 */
+	public void addEdge(int from, int to, W info) {
+		addArc(from, to, info);
+		addArc(to, from, info);
+	}
+
 	@Override
 	public Iterator<Integer> iterator() {
-		return new DepthFirstIterator<W>(this);
+		return new DepthFirstIterator();
 	}
+
+	public Iterator<Integer> bfIterator() { return new BreadthFirstIterator(); }
 	
 
 	//---------------------- PRIVATE -----------------------
+
+	private class BreadthFirstIterator implements Iterator<Integer> {
+		List<Integer> queue = new LinkedList<>();
+		boolean[] visited = new boolean[nVertex];
+
+		@Override
+		public boolean hasNext() {
+			if (queue.isEmpty()) {
+				// Возможно, остались еще не пройденные вершины
+				for (int i = 0; i <nVertex; ++i) {
+					if (!visited[i]) {
+						queue.add(i);
+						visited[i] = true;
+						break;
+					}
+				}
+			}
+			return !queue.isEmpty();
+		}
+
+		@Override
+		public Integer next() {
+			if (!hasNext()) throw new NoSuchElementException();
+			// Выбираем вершину из стека
+			Integer next = queue.remove(0);
+			// Помещаем в очередь новые вершины, в которые ведут дуги из выбранной
+			for (Arc<W> arc = lGraph[next]; arc != null; arc = arc.next) {
+				if (!visited[arc.to]) {
+					queue.add(arc.to);
+					visited[arc.to] = true;
+				}
+			}
+			return next;
+		}
+	}
 	
 	/**
 	 * Итератор вершин графа в порядке обхода в глубину
-	 *
-	 * @param <W>
 	 */
-	private static class DepthFirstIterator<W extends Number> implements Iterator<Integer> {
+	private class DepthFirstIterator implements Iterator<Integer> {
 		Stack<Integer> stack = new Stack<Integer>();	// Контейнер-стек
 		boolean[] marked;								// Массив пройденных вершин
-		Graph<W> m_graph;								// Граф
-		
+
 		/**
 		 * Инициализация итератора
-		 * @param graph
 		 */
-		DepthFirstIterator(Graph<W> graph) {
-			m_graph = graph;
-			marked = new boolean[graph.nVertex];
+		DepthFirstIterator() {
+			marked = new boolean[nVertex];
 		}
 
 		@Override
 		public boolean hasNext() {
 			if (stack.empty()) {
 				// Возможно, остались еще не пройденные вершины
-				for (int i = 0; i < m_graph.nVertex; ++i) {
+				for (int i = 0; i <nVertex; ++i) {
 					if (!marked[i]) {
 						stack.push(i);
 						break;
@@ -123,16 +164,11 @@ public class Graph<W extends Number> implements Iterable<Integer> {
 			Integer next = stack.pop();
 			marked[next] = true;
 			// Помещаем в стек новые вершины, в которые ведут дуги из выбранной
-			for (Arc<W> arc = m_graph.lGraph[next]; arc != null; arc = arc.next) {
+			for (Arc<W> arc = lGraph[next]; arc != null; arc = arc.next) {
 				if (!marked[arc.to] && !stack.contains(arc.to))
 					stack.push(arc.to);
 			}
 			return next;
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
 		}
 	}
 
