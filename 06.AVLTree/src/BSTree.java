@@ -1,8 +1,13 @@
 import java.util.Arrays;
 import java.util.Objects;
 
-
+/**
+ * Основа для реализации АВЛ-деревьев - двоичное дерево поиска
+ * @param <K>	Ключ для сравнений
+ * @param <V>	Хранимое значение
+ */
 public abstract class BSTree<K extends Comparable<K>, V> {
+
 	/**
 	 * Добавление в дерево новой ассоциативной пары.
 	 * 
@@ -28,11 +33,11 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 	 */
 	protected class BSNode {
 		// Ссылки на левое и правое поддеревья:
-		public BSNode left, right;
+		BSNode left, right;
 		// Ключ:
-		public K key;
+		K key;
 		// Значение:
-		public V value;
+		V value;
 
 		/**
 		 * Конструктор произвольного узла.
@@ -41,7 +46,7 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 		 * @param left левое поддерево
 		 * @param right правое поддерево
 		 */
-		public BSNode(K key, V value, BSNode left, BSNode right) {
+		BSNode(K key, V value, BSNode left, BSNode right) {
 			this.key = key; this.value = value;
 			this.left = left; this.right = right;
 		}
@@ -51,15 +56,15 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 		 * @param key ключ
 		 * @param value значение
 		 */
-		public BSNode(K key, V value) { this(key, value, null, null); }
+		BSNode(K key, V value) { this(key, value, null, null); }
 		
 		@Override
 		public String toString() {
 			return "<" + key + ", " + value + ">";
 		}
 	}
-	
-	// Корень дерева
+
+	// Корень дерева.
 	BSNode root = null;
 
 	/**
@@ -76,7 +81,7 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 	 * Стандартный двоичный поиск в дереве по ключу
 	 * @param key	Ключ поиска
 	 * @param node	Начальный корень
-	 * @return	найденное значение или null, если такого ключа нет в дереве.
+	 * @return		Результат поиска
 	 */
 	private V get(K key, BSNode node) {
 		while (node != null) {
@@ -88,7 +93,7 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 		// Ключ не найден
 		return null;
 	}
-	
+
 	/**
 	 * "Красивая" печать дерева.
 	 */
@@ -105,15 +110,17 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 		// Формируем строку из indent пробелов.
 		char[] spaces = new char[indent];
 		Arrays.fill(spaces, ' ');
-		System.out.print(String.valueOf(spaces));
+		System.out.print(new String(spaces));
 
+		// Представление пустого дерева.
 		if (node == null) {
-			System.out.println("..");
-		} else {
-			// Печать узла и его поддеревьев.
-			System.out.println(node);
-			print(node.left, indent + 2);
-			print(node.right, indent + 2);
+			System.out.println("--");
+			return;
 		}
+
+		// Печать узла и его поддеревьев.
+		System.out.println(node);
+		print(node.left, indent + 2);
+		print(node.right, indent + 2);
 	}
 }

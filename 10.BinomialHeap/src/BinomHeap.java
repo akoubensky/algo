@@ -458,17 +458,15 @@ public class BinomHeap<K extends Comparable<K>> {
 	public static void main(String[] args) {
 		// Заданный набор из 13 ключей.
 		int[] keys = { 10, 1, 12, 25, 18, 6, 8, 14, 29, 11, 17, 38, 27 };
-		// "Обратный" компаратор - приоритет будет тем выше, чем значение меньше.
-        Comparator<Integer> reversedComparator = Comparator.reverseOrder();
 
 		// Создаем кучу из первых 6 узлов.
-		BinomHeap<Integer> t1 = new BinomHeap<Integer>(reversedComparator);
+		BinomHeap<Integer> t1 = new BinomHeap<Integer>(Comparator.reverseOrder());
 		for (int i = 0; i < 6; ++i) {
 			t1.add(keys[i]);
 		}
 
 		// Создаем кучу из следующих 7 узлов.
-		BinomHeap<Integer> t2 = new BinomHeap<Integer>(reversedComparator);
+		BinomHeap<Integer> t2 = new BinomHeap<Integer>(Comparator.reverseOrder());
 		for (int i = 6; i < 13; ++i) {
 			t2.add(keys[i]);
 		}

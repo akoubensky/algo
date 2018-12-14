@@ -27,11 +27,11 @@ class BinSearchTree<K extends Comparable<K>, V> implements Iterable<V> {
 		Node less;
 		Node more;
 		
-		public Node(K key, V value) {
+		Node(K key, V value) {
 			this(key, value, null, null);
 		}
 		
-		public Node(K key, V value, Node less, Node more) {
+		Node(K key, V value, Node less, Node more) {
 			this.key = key;
 			this.value = value;
 			this.less = less;

@@ -21,15 +21,15 @@ class BinTree<T> implements Iterable<T> {
 	 * родительский узел.
 	 * @param <T>
 	 */
-	public static class Node<T> {
-		private T info;
-		private Node<T> left;
-		private Node<T> right;
+	private static class Node<T> {
+		T info;
+		Node<T> left;
+		Node<T> right;
 		/**
 		 * Ссылка на родительский узел используется только в одном из алгоритмов
 		 * внешней итерации узлов. См. {@link BinTree.TreeIterator}
 		 */
-		private Node<T> parent;
+		Node<T> parent;
 
 		/**
 		 * Конструктор узла дерева.
@@ -38,7 +38,7 @@ class BinTree<T> implements Iterable<T> {
 		 * @param right
 		 * @param parent
 		 */
-		public Node(T info, Node<T> left, Node<T> right, Node<T> parent) {
+		Node(T info, Node<T> left, Node<T> right, Node<T> parent) {
 			this.info = info;
 			this.left = left;
 			this.right = right;
@@ -49,14 +49,14 @@ class BinTree<T> implements Iterable<T> {
 		 * Конструктор узла дерева, не связанного с другими узлами
 		 * @param info
 		 */
-		public Node(T info) { this(info, null, null, null); }
+		Node(T info) { this(info, null, null, null); }
 
 		/**
 		 * Добавление нового узла в качестве левого поддерева
 		 * @param info Добавляемый элемент
 		 * @return Созданный новый узел
 		 */
-		public Node<T> addLeft(T info) {
+		Node<T> addLeft(T info) {
 			assert left == null;
 
 			Node<T> newNode = new Node<T>(info);
@@ -70,7 +70,7 @@ class BinTree<T> implements Iterable<T> {
 		 * @param info Добавляемый элемент
 		 * @return Созданный новый узел
 		 */
-		public Node<T> addRight(T info) {
+		Node<T> addRight(T info) {
 			assert right == null;
 
 			Node<T> newNode = new Node<T>(info);
@@ -89,10 +89,10 @@ class BinTree<T> implements Iterable<T> {
 	public BinTree() {}
 
 	/**
-	 * Конструктор дерева с заданным корнем.
+	 * Конструктор дерева с заданным корнем. For testing only!
 	 * @param node Корень дерева
 	 */
-	public BinTree(Node<T> node) {
+	private BinTree(Node<T> node) {
 		root = node;
 	}
 
@@ -382,7 +382,7 @@ class BinTree<T> implements Iterable<T> {
 	
 	/**
 	 * Превращает дерево в поток узлов для, возможно, параллельной обработки,
-	 * используя {@link BinTree.spliterator}
+	 * используя {@link BinTree.spliterator()}
 	 * @return
 	 */
 	public Stream<T> stream() {

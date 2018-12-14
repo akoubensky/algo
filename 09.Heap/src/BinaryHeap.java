@@ -7,13 +7,18 @@ import java.util.List;
 /**
  * Организация двоичной кучи и реализация основных операций для работы с ней.
  */
-public class BinaryHeap<P extends Comparable<P>> {
+public class BinaryHeap<P> {
 	/**
 	 * Компаратор для данной кучи. По умолчанию производит "естественное"
 	 * сравнение элементов. Все элементы, помещаемые в эту кучу, размещаются в
 	 * соответствии со сравнениями, производимыми данным компаратором.
 	 */
-	private Comparator<P> comparator = Comparator.naturalOrder();
+	private Comparator<P> comparator = (o1, o2) -> {
+		if (!(o1 instanceof Comparable && o2 instanceof Comparable)) {
+			throw new IllegalArgumentException("Not comparable elements");
+		}
+		return ((Comparable)o1).compareTo(o2);
+	};
 
 	/**
 	 * Хранилище элементов кучи - динамический массив элементов.
