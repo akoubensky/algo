@@ -13,7 +13,6 @@ import java.util.Iterator;
  * - removeNode(node) Удаление узла.
  *
  * @param <K> Тип ключей.
- * @param <V> Тип информационного поля.
  */
 public class BinomHeap<K extends Comparable<K>> {
 	/**
@@ -54,7 +53,7 @@ public class BinomHeap<K extends Comparable<K>> {
 
 		/**
 		 * Конструктор узла - недоступен извне класса, так что
-		 * создавать узлы можно только изнутри класса BinomHeap. 
+		 * создавать узлы можно только изнутри класса BinomHeap.
 		 * @param key Ключ нового узла.
 		 */
 		private Node(K key) { this.key = key; }
@@ -67,7 +66,7 @@ public class BinomHeap<K extends Comparable<K>> {
 
 		/**
 		 * Функция соединения двух биномиальных деревьев одного уровня.
-		 * Реализована в виде метода узла, к кторому в качестве потомка 
+		 * Реализована в виде метода узла, к кторому в качестве потомка
 		 * присоединяется другой узел.
 		 * @param node Присоединяемый узел
 		 */
@@ -249,7 +248,6 @@ public class BinomHeap<K extends Comparable<K>> {
 	 * самого приоритетного значения из кучи и при удалении заданного узла.
 	 * Оценка времени работы - O(log N).
 	 * @param node Удаляемый узел из корневого списка.
-	 * @param predNode Предыдущий узел в корневом списке.
 	 * @return Удаленный узел
 	 */
 	private Node<K> removeRootNode(Node<K> node) {
@@ -461,11 +459,7 @@ public class BinomHeap<K extends Comparable<K>> {
 		// Заданный набор из 13 ключей.
 		int[] keys = { 10, 1, 12, 25, 18, 6, 8, 14, 29, 11, 17, 38, 27 };
 		// "Обратный" компаратор - приоритет будет тем выше, чем значение меньше.
-		Comparator<Integer> reversedComparator = new Comparator<Integer>() {
-			public int compare(Integer o1, Integer o2) {
-				return o2.compareTo(o1);
-			}
-		};
+        Comparator<Integer> reversedComparator = Comparator.reverseOrder();
 
 		// Создаем кучу из первых 6 узлов.
 		BinomHeap<Integer> t1 = new BinomHeap<Integer>(reversedComparator);

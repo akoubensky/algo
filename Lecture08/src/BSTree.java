@@ -39,7 +39,6 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 		 * Конструктор произвольного узла.
 		 * @param key ключ
 		 * @param value значение
-		 * @param balance показатель сбалансированности узла
 		 * @param left левое поддерево
 		 * @param right правое поддерево
 		 */
@@ -78,7 +77,7 @@ public abstract class BSTree<K extends Comparable<K>, V> {
 	 * Стандартный двоичный поиск в дереве по ключу
 	 * @param key	Ключ поиска
 	 * @param node	Начальный корень
-	 * @return
+	 * @return		Результат поиска
 	 */
 	private V get(K key, BSNode node) {
 		while (node != null) {

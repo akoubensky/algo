@@ -6,7 +6,6 @@ import java.util.List;
 
 /**
  * Организация двоичной кучи и реализация основных операций для работы с ней.
- * Кроме того, в классе реализована функция сортировки массива методом heapsort.
  */
 public class BinaryHeap<P extends Comparable<P>> {
 	/**
@@ -14,16 +13,12 @@ public class BinaryHeap<P extends Comparable<P>> {
 	 * сравнение элементов. Все элементы, помещаемые в эту кучу, размещаются в
 	 * соответствии со сравнениями, производимыми данным компаратором.
 	 */
-	private Comparator<P> comparator = new Comparator<P>() {
-		public int compare(P o1, P o2) {
-			return o1.compareTo(o2);
-		}
-	};
+	private Comparator<P> comparator = Comparator.naturalOrder();
 
 	/**
 	 * Хранилище элементов кучи - динамический массив элементов.
 	 */
-	private ArrayList<P> heap = new ArrayList<P>();
+	private ArrayList<P> heap = new ArrayList<>();
 
 	/**
 	 * Конструктор пустой кучи.
@@ -32,9 +27,29 @@ public class BinaryHeap<P extends Comparable<P>> {
 
 	/**
 	 * Конструктор пустой кучи с заданным компаратором элементов.
-	 * @param comparator
+	 * @param comparator    Компаратор для сравнения элементов
 	 */
 	public BinaryHeap(Comparator<P> comparator) { this.comparator = comparator; }
+
+    /**
+     * Конструктор кучи из набора заданных элементов.
+     * @param collection    Заданное множество элементов
+     */
+    public BinaryHeap(Collection<P> collection) {
+        heap = new ArrayList<>(collection);
+        heapify();
+    }
+
+    /**
+     * Конструктор кучи из набора заданных элементов с заданным компаратором элементов.
+     * @param collection    Заданное множество элементов
+     * @param comparator    Компаратор для сравнения элементов
+     */
+    public BinaryHeap(Collection<P> collection, Comparator<P> comparator) {
+        this.comparator = comparator;
+        heap = new ArrayList<>(collection);
+        heapify();
+    }
 
 	/**
 	 * Компаратор, используемый в данной куче.
@@ -63,7 +78,7 @@ public class BinaryHeap<P extends Comparable<P>> {
 	 * прерывание IllegalStateException, если куча не содержит ни одного элемента.
 	 * @return Элемент из кучи с максимальным приоритетом.
 	 */
-	public P getBest() {
+	public P peek() {
 		if (heap.isEmpty()) throw new IllegalStateException();
 		return heap.get(0);
 	}
@@ -75,7 +90,7 @@ public class BinaryHeap<P extends Comparable<P>> {
 	 * по-прежнему был элемент с максимальным приоритетом.
 	 * @return Элемент из кучи с максимальным приоритетом.
 	 */
-	public P retrieveBest() {
+	public P poll() {
 		if (heap.isEmpty()) throw new IllegalStateException();
 		P retValue = heap.get(0);
 		if (heap.size() > 1) {
@@ -93,7 +108,7 @@ public class BinaryHeap<P extends Comparable<P>> {
 	 * @param element Добавляемый элемент.
 	 * @return Позиция добавленного элемента в куче (впоследствии может измениться).
 	 */
-	public int add(P element) {
+	public int offer(P element) {
 		if (element == null) {
 			throw new IllegalArgumentException();
 		}
@@ -154,9 +169,16 @@ public class BinaryHeap<P extends Comparable<P>> {
 	 * @param other Коллекция, элементы которой добавляются в данную.
 	 */
 	public void add(Collection<P> other) {
-		heap.ensureCapacity(heap.size() + other.size());
-		for (P element : other) {
-			add(element);
+		heap.addAll(other);
+		heapify();
+	}
+
+	/**
+	 * Преобразует массив элементов, лежащих в heap, в даоичную кучу.
+	 */
+	private void heapify() {
+		for (int i = (heap.size() - 1)/2; i>=0; i--) {
+			pushDown(i);
 		}
 	}
 
@@ -216,21 +238,21 @@ public class BinaryHeap<P extends Comparable<P>> {
 		List<Integer> list = Arrays.asList(7, 5, 2, 8, 4, 9, 10, 1, 6, 3, 0);
 
 		// Создаем двоичную кучу и помещаем в нее элементы заданного массива.
-		BinaryHeap<Integer> heap = new BinaryHeap<Integer>();
+		BinaryHeap<Integer> heap = new BinaryHeap<>();
 		heap.add(list);
 
 		// Извлекаем элементы из кучи, начиная с максимального, пока не опустошим всю кучу.
 		while (!heap.isEmpty()) {
-			System.out.print(" " + heap.retrieveBest());
+			System.out.print(" " + heap.poll());
 		}
 		System.out.println();
 
 		// Сортируем исходный массив методом двоичной кучи и печатаем результат.
-		Integer[] array = list.toArray(new Integer[0]);
+		Integer[] array = list.toArray(new Integer[list.size()]);
 		Heapsort.sort(array);
-		for (int i = 0; i < array.length; ++i) {
-			System.out.print(" " + array[i]);
-		}
+        for (Integer element : array) {
+            System.out.print(" " + element);
+        }
 		System.out.println();
 	}
 }

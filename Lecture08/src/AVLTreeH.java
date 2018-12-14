@@ -20,24 +20,11 @@ public class AVLTreeH<K extends Comparable<K>, V> extends BSTree<K, V> {
 	/**
 	 * Класс представляет узел дерева. Этот класс предназначен только
 	 * для внутренних целей, поэтому он private, и доступ к полям объектов
-	 * этого класса осуществляется непосредственно.
+	 * этого класса осуществляется непосредственно из функций.
 	 */
 	private class Node extends BSNode {
 		// Высота соответствующего поддерева:
 		int height;
-
-		/**
-		 * Конструктор произвольного узла.
-		 * @param key ключ
-		 * @param value значение
-		 * @param height высота узла
-		 * @param left левое поддерево
-		 * @param right правое поддерево
-		 */
-		Node(K key, V value, int height, Node left, Node right) {
-			super(key, value, left, right);
-			this.height = height;
-		}
 
 		/**
 		 * Конструктор листа.
@@ -166,7 +153,7 @@ public class AVLTreeH<K extends Comparable<K>, V> extends BSTree<K, V> {
 		int heightRight = node.right == null ? 0 : ((Node)node.right).height;
 		
 		if (heightLeft > heightRight) {
-			Node child = (Node)node.left;
+			Node child = Objects.requireNonNull((Node)node.left);
 			if ((child.left == null ? 0 : ((Node)child.left).height) <
 			    (child.right == null ? 0 : ((Node)child.right).height)) {
 				// Необходим двойной поворот
@@ -174,7 +161,7 @@ public class AVLTreeH<K extends Comparable<K>, V> extends BSTree<K, V> {
 			}
 			return pivotLeft(node);
 		} else {
-			Node child = (Node)node.right;
+			Node child = Objects.requireNonNull((Node)node.right);
 			if ((child.left == null ? 0 : ((Node)child.left).height) >
 			    (child.right == null ? 0 : ((Node)child.right).height)) {
 				// Необходим двойной поворот
@@ -234,7 +221,7 @@ public class AVLTreeH<K extends Comparable<K>, V> extends BSTree<K, V> {
 	 * @param args не используется.
 	 */
 	public static void main(String[] args) {
-		AVLTreeH<Integer, Integer> tree = new AVLTreeH<Integer, Integer>();
+		AVLTreeH<Integer, Integer> tree = new AVLTreeH<>();
 		int[] keys = { 5, 7, 9, 1, 11, 8, 15, 13, 3, 10 };
 		for (int key : keys) {
 			System.out.println("Added: <" + key + ", " + 2*key + ">");
