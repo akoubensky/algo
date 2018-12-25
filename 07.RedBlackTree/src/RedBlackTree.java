@@ -135,23 +135,7 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 		// После вставки может оказаться нарушенной балансировка дерева - 
 		// у красного узла может образоваться красный потомок.
 		
-		// 1. Если красный узел справа, то перевешиваем его так, чтобы красный узел был слева.
-        if (isRed((Node)node.right) && isBlack((Node)node.left)) {
-        	node = pivotLeft(node);
-        }
-        
-        // 2. Если есть два рядом расположенных красных узла, то делаем обратный поворот,
-        //    чтобы оба красных узла были потомками узла node.
-        if (isRed((Node)node.left)  && isRed((Node)node.left.left)) {
-        	node = pivotRight(node);
-        }
-        
-        // 3. Если теперь оба потомка красные, то продвигаем красноту наверх, перекрашивая узлы.
-        if (isRed((Node)node.left)  && isRed((Node)node.right)) {
-        	flipColors(node);
-        }
-        
-        return node;
+		return balance(node);
 	}
 	
 	/**
@@ -262,12 +246,17 @@ public class RedBlackTree<K extends Comparable<K>, V> extends BSTree<K, V> {
 	private Node balance(Node node) {
     	assert node != null;
 
+		// 1. Если красный узел справа, то перевешиваем его так, чтобы красный узел был слева.
         if (isRed((Node)node.right)) {
         	node = pivotLeft(node);
         }
+
+		// 2. Если есть два рядом расположенных красных узла, то делаем обратный поворот,
         if (isRed((Node)node.left) && isRed((Node)node.left.left)) {
         	node = pivotRight(node);
         }
+
+		// 3. Если теперь оба потомка красные, то продвигаем красноту наверх, перекрашивая узлы.
         if (isRed((Node)node.left) && isRed((Node)node.right)) {
         	flipColors(node);
         }
