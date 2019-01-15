@@ -1,8 +1,5 @@
 package minpathtree;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.NoSuchElementException;
-import java.util.Queue;
+import java.util.*;
 
 
 /**
@@ -16,14 +13,10 @@ public class Graph implements Iterable<Integer> {
 	public static class Arc {
 		long info;		// Нагрузка на дугу
 		int to;			// Номер вершины, в которую ведет дуга
-		Arc next;		// Следующая дуга в списке
 
-		public Arc(int to, long info, Arc next) {
-			this.to = to; this.info = info; this.next = next;
-		}
-		
 		public Arc(int to, long info) {
-			this(to, info, null);
+			this.to = to;
+			this.info = info;
 		}
 		
 		public long info() { return info; }
@@ -31,7 +24,7 @@ public class Graph implements Iterable<Integer> {
 		public int to() { return to; }
 	};
 
-	private final Arc[] lGraph;		// Списки смежности
+	private final List<Arc>[] lGraph;		// Списки смежности
 	private final int nVertex;		// Число вершин
 
 	/**
@@ -39,8 +32,11 @@ public class Graph implements Iterable<Integer> {
 	 * @param nVert Число вершин
 	 */
 	public Graph(int nVert) {
-		lGraph = new Arc[nVert];
+		lGraph = new ArrayList[nVert];
 		nVertex = nVert;
+		for (int i = 0; i < nVert; i++) {
+			lGraph[i] = new ArrayList<>();
+		}
 	}
 	
 	/**
@@ -59,21 +55,12 @@ public class Graph implements Iterable<Integer> {
 		assert from < nVertex && from >= 0;
 		assert to < nVertex && to >= 0;
 		
-		lGraph[from] = new Arc(to, info, lGraph[from]);
+		lGraph[from].add(new Arc(to, info));
 	}
 	
 	@Override
 	public Iterator<Integer> iterator() {
-		return new BreadthFirstIterator(this);
-	}
-	
-	/**
-	 * Итератор дуг, исходящих из заданной вершины.
-	 * @param v	Начальная вершина
-	 * @return	Итератор дуг
-	 */
-	public Iterator<Arc> arcsIterator(int v) {
-		return new ArcsIterator(this, v);
+		return new BreadthFirstIterator();
 	}
 	
 	/**
@@ -94,8 +81,7 @@ public class Graph implements Iterable<Integer> {
 		// Просматриваем одну компоненту
 		while (!queue.isEmpty()) {
 			int u = queue.poll();
-			for (Iterator<Arc> it = arcsIterator(u); it.hasNext(); ) {
-				Arc arc = it.next();
+			for (Arc arc : lGraph[u]) {
 				if (!passed[arc.to]) {
 					queue.offer(arc.to);
 					passed[arc.to] = true;
@@ -112,30 +98,25 @@ public class Graph implements Iterable<Integer> {
 	
 	/**
 	 * Итератор вершин графа в порядке обхода в ширину
-	 *
-	 * @param <W>
 	 */
-	private static class BreadthFirstIterator implements Iterator<Integer> {
+	private class BreadthFirstIterator implements Iterator<Integer> {
 		Queue<Integer> queue = new LinkedList<Integer>();	// Контейнер-очередь
 		boolean[] marked;				// Массив пройденных вершин
 		boolean[] passed;				// Массив помещенных в очередь вершин
-		Graph m_graph;				// Граф
-		
+
 		/**
 		 * Инициализация итератора
-		 * @param graph
 		 */
-		BreadthFirstIterator(Graph graph) {
-			m_graph = graph;
-			marked = new boolean[graph.nVertex];
-			passed = new boolean[graph.nVertex];
+		BreadthFirstIterator() {
+			marked = new boolean[nVertex];
+			passed = new boolean[nVertex];
 		}
 
 		@Override
 		public boolean hasNext() {
 			if (queue.isEmpty()) {
 				// Возможно, остались еще не пройденные вершины
-				for (int i = 0; i < m_graph.nVertex; ++i) {
+				for (int i = 0; i < nVertex; ++i) {
 					if (!marked[i]) {
 						queue.offer(i);
 						passed[i] = true;
@@ -153,7 +134,7 @@ public class Graph implements Iterable<Integer> {
 			Integer next = queue.poll();
 			marked[next] = true;
 			// Помещаем в очередь новые вершины, в которые ведут дуги из выбранной
-			for (Arc arc = m_graph.lGraph[next]; arc != null; arc = arc.next) {
+			for (Arc arc : lGraph[next]) {
 				if (!passed[arc.to]) {
 					queue.offer(arc.to);
 					passed[arc.to] = true;
@@ -161,45 +142,6 @@ public class Graph implements Iterable<Integer> {
 			}
 			return next;
 		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
-		}
 	}
 	
-	/**
-	 * Реализация итератора дуг, ведущих из заданной вершины
-	 */
-	private static class ArcsIterator implements Iterator<Arc> {
-		Arc currArc;
-
-		/**
-		 * Конструктор, запоминающий начало списка дуг
-		 * @param graph	Граф
-		 * @param v		Начальная вершина
-		 */
-		public ArcsIterator(Graph graph, int v) {
-			currArc = graph.lGraph[v];
-		}
-		
-		@Override
-		public boolean hasNext() {
-			return currArc != null;
-		}
-
-		@Override
-		public Arc next() {
-			if (currArc == null) throw new NoSuchElementException();
-			Arc nextArc = currArc;
-			currArc = currArc.next;
-			return nextArc;
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException();
-		}
-		
-	}
 }
