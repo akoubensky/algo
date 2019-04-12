@@ -67,12 +67,29 @@ public class Trie<V> {
          */
         Node(V value) {
             this.value = value;
+            hasValue = true;
         }
 
         /**
          * Создание пустого узла
          */
         Node() {}
+
+        /**
+         * Поиск дуги в упорядоченном списке по заданному ключу-метке дуги
+         * @param c     Метка-ключ поиска
+         * @return      Найденная дуга, если она есть в списке дуг, null в противном случае
+         */
+        private Node<V> find(char c) {
+            for (Arc<V> arc : arcs) {
+                if (arc.symbol == c) {
+                    return arc.node;
+                } else if (arc.symbol > c) {
+                    break;
+                }
+            }
+            return null;
+        }
 
         /**
          * Вставка новой дуги в упорядоченный список дуг заданного узла.
@@ -86,6 +103,23 @@ public class Trie<V> {
                 }
             }
             arcs.subList(0, index).add(arc);
+        }
+
+        /**
+         * Удаление дуги из (упорядоченного) списка дуг по заданному ключу-метке дуги.
+         * assert: удаляемая дуга непременно есть в списке
+         * @param c     Метка-ключ удаляемой дуги
+         */
+        private void removeArc(char c) {
+            for (Iterator<Arc<V>> it = arcs.iterator(); it.hasNext(); ) {
+                Arc<V> nextArc = it.next();
+                if (nextArc.symbol == c) {
+                    it.remove();
+                    return;
+                } else if (nextArc.symbol > c) {
+                    return;
+                }
+            }
         }
     }
 
@@ -219,7 +253,7 @@ public class Trie<V> {
         RemoveResult<V> rr = remove(key, 0, root);
         if (rr.remove) {
             // Удаление "висячей" ветки
-            remove(root.arcs, key.charAt(0));
+            root.removeArc(key.charAt(0));
         }
         return rr.result;
     }
@@ -235,40 +269,6 @@ public class Trie<V> {
     //=============================================================
 
     /**
-     * Поиск дуги в упорядоченном списке по заданному ключу-метке дуги
-     * @param arcs  Список дуг
-     * @param c     Метка-ключ поиска
-     * @param <V>   Тип значений, хранящихся в узлах дерева
-     * @return
-     */
-    private static <V> Node<V> find(List<Arc<V>> arcs, char c) {
-        for (Arc<V> arc : arcs) {
-            if (arc.symbol == c) {
-                return arc.node;
-            } else if (arc.symbol > c) {
-                break;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Удаление дуги из (упорядоченного) списка дуг по заданному ключу-метке дуги.
-     * assert: удаляемая дуга непременно есть в списке
-     * @param arcs  Список дуг
-     * @param c     Метка-ключ удаляемой дуги
-     * @param <V>   Тип значений, хранящихся в узлах дерева
-     */
-    private static <V> void remove(List<Arc<V>> arcs, char c) {
-        for (Iterator<Arc<V>> it = arcs.iterator(); it.hasNext(); ) {
-            if (it.next().symbol == c) {
-                it.remove();
-                return;
-            }
-        }
-    }
-
-    /**
      * Вспомогательная рекурсивная функция поиска в дереве по заданному ключу.
      * @param key   Ключ поиска
      * @param i     Индекс символа в ключе, показывающий позицию очередного еще не просмотренного символа
@@ -280,7 +280,7 @@ public class Trie<V> {
         if (i == key.length()) {
             return node.hasValue ? Optional.of(node.value) : Optional.empty();
         }
-        Node<V> next = find(node.arcs, key.charAt(i));
+        Node<V> next = node.find(key.charAt(i));
         return next == null ? Optional.empty() : get(key, i+1, next);
     }
 
@@ -301,7 +301,7 @@ public class Trie<V> {
             node.value = value;
             return result;
         } else {
-            Node<V> next = find(node.arcs, key.charAt(i));
+            Node<V> next = node.find(key.charAt(i));
             if (next == null) {
                 // Добавление ранее отсутствующей дуги
                 node.insert(new Arc<V>(key.charAt(i), next = new Node<>()));
@@ -343,7 +343,7 @@ public class Trie<V> {
             // Ветку надо будет удалить, если из ее конечного узла уже нет никаких дуг
             return new RemoveResult<>(node.arcs.isEmpty(), result);
         } else {
-            Node<V> next = find(node.arcs, key.charAt(i));
+            Node<V> next = node.find(key.charAt(i));
             if (next == null) {
                 // Ключ в дереве не найден
                 return new RemoveResult<>(false, Optional.empty());
@@ -351,7 +351,7 @@ public class Trie<V> {
             RemoveResult<V> rr = remove(key, i+1, next);
             if (rr.remove) {
                 // Удаление "висячей" ветки
-                remove(node.arcs, key.charAt(i));
+                node.removeArc(key.charAt(i));
             }
             return new RemoveResult<>(rr.remove && node.arcs.isEmpty() && !node.hasValue, rr.result);
         }
