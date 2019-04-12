@@ -1,9 +1,4 @@
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Реализация индексного дерева (Trie, бор) с ключами-строками
@@ -195,6 +190,20 @@ public class Trie<V> {
                 res = ((Comparable<V>)value).compareTo(o.value);
             }
             return res;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            TrieEntry<?> trieEntry = (TrieEntry<?>) o;
+            return Objects.equals(key, trieEntry.key) &&
+                    Objects.equals(value, trieEntry.value);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(key, value);
         }
 
         /**
