@@ -195,10 +195,10 @@ public class Trie<V> {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            TrieEntry<?> trieEntry = (TrieEntry<?>) o;
-            return Objects.equals(key, trieEntry.key) &&
-                    Objects.equals(value, trieEntry.value);
+            if (o == null || !(o instanceof Map.Entry)) return false;
+            Map.Entry<?, ?> trieEntry = (Map.Entry<?, ?>) o;
+            return Objects.equals(key, trieEntry.getKey()) &&
+                    Objects.equals(value, trieEntry.getValue());
         }
 
         @Override
