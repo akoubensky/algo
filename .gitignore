@@ -6,7 +6,9 @@
 .project
 .metadata
 .recommenders
+.idea/
 bin/
+out/
 tmp/
 *.tmp
 *.bak
