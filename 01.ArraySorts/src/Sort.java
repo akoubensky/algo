@@ -1,5 +1,4 @@
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Random;
 
 /**
@@ -71,16 +70,37 @@ public class Sort {
 	public static <T extends Comparable<T>> void mergeSort(T[] array) {
 		mergeSort(array, 0, array.length);
 	}
-	
+
+	private static <T extends Comparable<T>> void quickSort(T[] array, int low, int high) {
+		if (high-low <= 1) return;
+		T middle = array[low];
+		int indLow = low, indHigh = high;
+		while(indLow < indHigh) {
+			while (--indHigh > indLow && array[indHigh].compareTo(middle) >= 0) ;
+			array[indLow] = array[indHigh];
+			while (++indLow < indHigh && array[indLow].compareTo(middle) <= 0) ;
+			array[indHigh] = array[indLow];
+		}
+		array[indLow] = middle;
+		quickSort(array, low, indLow);
+		quickSort(array, indLow + 1, high);
+	}
+
+	public static <T extends Comparable<T>> void quickSort(T[] array) {
+		quickSort(array, 0, array.length);
+	}
+
 	// Генератор случайных чисел
 	private static Random rnd = new Random();
 	
 	/**
 	 * Типы сортировок
 	 */
-	private static enum SortType {
+	private enum SortType {
 		INSERT_SORT,
-		MERGE_SORT
+		MERGE_SORT,
+		QUICK_SORT,
+		SYSTEM_SORT
 	}
 
 	/**
@@ -94,10 +114,15 @@ public class Sort {
 		for (int i = 0; i < length; ++i) {
 			array[i] = rnd.nextInt(10 * length);
 		}
-		long startTime = Calendar.getInstance().getTimeInMillis();
-		if (testType == SortType.INSERT_SORT) insertSort(array); else mergeSort(array);
-		long finishTime = Calendar.getInstance().getTimeInMillis();
-		return finishTime - startTime;
+		long startTime = System.nanoTime();
+		switch (testType) {
+			case INSERT_SORT -> insertSort(array);
+			case MERGE_SORT -> mergeSort(array);
+			case QUICK_SORT -> quickSort(array);
+			case SYSTEM_SORT -> Arrays.sort(array);
+		}
+		long finishTime = System.nanoTime();
+		return (finishTime - startTime);
 	}
 	
 	/**
@@ -107,15 +132,24 @@ public class Sort {
 	 */
 	public static void main(String[] args) {
 		// Числа можно подобрать по своему вкусу.
-		int count = 100;
-		System.out.format("Повторяем сортировки %d раз%n", count);
+		int count = 300;
+		System.out.format("Repeat count: %d%n", count);
 		for (int test : new int[] { 50, 300, 10000 }) {
 			long millisMerge = 0;
 			long millisInsert = 0;
+			long millisQuick = 0;
+			long millisSystem = 0;
 			for (int i = 0; i < count; i++) millisMerge += testSort(SortType.MERGE_SORT, test);
 			for (int i = 0; i < count; i++) millisInsert += testSort(SortType.INSERT_SORT, test);
-			System.out.format("Сортируем %d элементов%n  Вставками: %d ms, слиянием: %d ms%n",
-					test, millisInsert, millisMerge);
+			for (int i = 0; i < count; i++) millisQuick += testSort(SortType.QUICK_SORT, test);
+			for (int i = 0; i < count; i++) millisSystem += testSort(SortType.SYSTEM_SORT, test);
+			System.out.format(
+					"Sorting %d items%n  InsertSort: %d ms, MergeSort: %d ms, QuickSort: %d ms, Arrays.sort: %d ms%n",
+					test,
+					millisInsert / 1_000_000,
+					millisMerge / 1_000_000,
+					millisQuick / 1_000_000,
+					millisSystem / 1_000_000);
 		}
 	}
 
