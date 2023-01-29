@@ -126,16 +126,16 @@ public class VectorSet {
         if (isLess(v.getStart(), root.info)) {
         	// Вектор лежит в левом поддереве.
             Pair<Vector, Vector> siblings = findSiblings(v, root.left);
-            if (siblings.getSecond() == null) {
-                return new Pair<>(siblings.getFirst(), root.info);
+            if (siblings.second() == null) {
+                return new Pair<>(siblings.first(), root.info);
             } else {
                 return siblings;
             }
         } else {
         	// Вектор лежит в правом поддереве
             Pair<Vector, Vector> siblings = findSiblings(v, root.right);
-            if (siblings.getFirst() == null) {
-                return new Pair<>(root.info, siblings.getSecond());
+            if (siblings.first() == null) {
+                return new Pair<>(root.info, siblings.second());
             } else {
                 return siblings;
             }

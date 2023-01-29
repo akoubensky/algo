@@ -1,11 +1,11 @@
 package geometry;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Проверка некоторых операций вычислительной геометрии с векторами.
@@ -38,18 +38,18 @@ public class VectorsTest {
         Vector v2 = new Vector(new Point(2, 3));
         Vector v3 = new Vector(new Point(8, 2));
         Vector v4 = new Vector(new Point(-2, -3));
-        assertEquals("Wrong direction", Direction.POSITIVE, Vectors.getDirection(v1, v2));
-        assertEquals("Wrong direction", Direction.NEGATIVE, Vectors.getDirection(v2, v1));
-        assertEquals("Wrong direction", Direction.COLLINEAR, Vectors.getDirection(v1, v3));
-        assertEquals("Wrong direction", Direction.ANTI_COLLINEAR, Vectors.getDirection(v2, v4));
+        assertEquals(Direction.POSITIVE, Vectors.getDirection(v1, v2), "Wrong direction");
+        assertEquals(Direction.NEGATIVE, Vectors.getDirection(v2, v1), "Wrong direction");
+        assertEquals(Direction.COLLINEAR, Vectors.getDirection(v1, v3), "Wrong direction");
+        assertEquals(Direction.ANTI_COLLINEAR, Vectors.getDirection(v2, v4), "Wrong direction");
 
         Vector v5 = new Vector(new Point(0, 1));
         Vector v6 = new Vector(new Point(0, 3));
         Vector v7 = new Vector(new Point(0, -2));
-        assertEquals("Wrong direction", Direction.POSITIVE, Vectors.getDirection(v2, v5));
-        assertEquals("Wrong direction", Direction.COLLINEAR, Vectors.getDirection(v5, v6));
-        assertEquals("Wrong direction", Direction.ANTI_COLLINEAR, Vectors.getDirection(v5, v7));
-        assertEquals("Wrong direction", Direction.NEGATIVE, Vectors.getDirection(v1, v7));
+        assertEquals(Direction.POSITIVE, Vectors.getDirection(v2, v5), "Wrong direction");
+        assertEquals(Direction.COLLINEAR, Vectors.getDirection(v5, v6), "Wrong direction");
+        assertEquals(Direction.ANTI_COLLINEAR, Vectors.getDirection(v5, v7), "Wrong direction");
+        assertEquals(Direction.NEGATIVE, Vectors.getDirection(v1, v7), "Wrong direction");
     }
 
     @Test
@@ -61,7 +61,7 @@ public class VectorsTest {
         for (int i = 0; i < points.length; i++) {
             int p = i==0 ? points.length - 1 : i-1;
             int s = i==points.length-1 ? 0 : i+1;
-            assertEquals("Wrong turn", Direction.POSITIVE, Vectors.getTurn(points[p], points[i], points [s]));
+            assertEquals(Direction.POSITIVE, Vectors.getTurn(points[p], points[i], points [s]), "Wrong turn");
         }
     }
 
@@ -69,52 +69,52 @@ public class VectorsTest {
     public void areRectanglesIntersect() {
         Vector v11 = new Vector(new Point(5, 3));
         Vector v12 = new Vector(new Point(1, 1), new Point(4, 2));
-        assertTrue("Intersection", Vectors.areRectanglesIntersect(v11, v12));
+        assertTrue(Vectors.areRectanglesIntersect(v11, v12), "Intersection");
         Vector v21 = new Vector(new Point(5, -3));
         Vector v22 = new Vector(new Point(5, -4), new Point(7, -2));
-        assertTrue("Intersection", Vectors.areRectanglesIntersect(v21, v22));
+        assertTrue(Vectors.areRectanglesIntersect(v21, v22), "Intersection");
         Vector v31 = new Vector(new Point(1, 3));
         Vector v32 = new Vector(new Point(-1, 4), new Point(2, 2));
-        assertTrue("Intersection", Vectors.areRectanglesIntersect(v31, v32));
+        assertTrue(Vectors.areRectanglesIntersect(v31, v32), "Intersection");
         Vector v41 = new Vector(new Point(2, -3));
         Vector v42 = new Vector(new Point(-1, -1), new Point(-4, -2));
-        assertFalse("Intersection", Vectors.areRectanglesIntersect(v41, v42));
+        assertFalse(Vectors.areRectanglesIntersect(v41, v42), "Intersection");
         Vector v51 = new Vector(new Point(1, 1));
         Vector v52 = new Vector(new Point(2, -1), new Point(3, -2));
-        assertFalse("Intersection", Vectors.areRectanglesIntersect(v51, v52));
+        assertFalse(Vectors.areRectanglesIntersect(v51, v52), "Intersection");
         Vector v61 = new Vector(new Point(3, 1));
         Vector v62 = new Vector(new Point(1, -1), new Point(2, 2));
-        assertTrue("Intersection", Vectors.areRectanglesIntersect(v61, v62));
+        assertTrue(Vectors.areRectanglesIntersect(v61, v62), "Intersection");
     }
 
     @Test
     public void areVectorsIntersect() {
         Vector v11 = new Vector(new Point(6, 3));
         Vector v12 = new Vector(new Point(3, 2), new Point(6, 4));
-        assertFalse("Vectors intersection", Vectors.areVectorsIntersect(v11, v12));
+        assertFalse(Vectors.areVectorsIntersect(v11, v12), "Vectors intersection");
         Vector v22 = new Vector(new Point(6, 4));
-        assertTrue("Vectors intersection", Vectors.areVectorsIntersect(v11, v22));
+        assertTrue(Vectors.areVectorsIntersect(v11, v22), "Vectors intersection");
         Vector v31 = new Vector(new Point(3, -2));
         Vector v32 = new Vector(new Point(1, -3), new Point(1, -1));
-        assertFalse("Vectors intersection", Vectors.areVectorsIntersect(v31, v32));
+        assertFalse(Vectors.areVectorsIntersect(v31, v32), "Vectors intersection");
         Vector v41 = new Vector(new Point(0, -1), new Point(3, -2));
-        assertTrue("Vectors intersection", Vectors.areVectorsIntersect(v41, v32));
+        assertTrue(Vectors.areVectorsIntersect(v41, v32), "Vectors intersection");
         Vector v51 = new Vector(new Point(2, 2));
         Vector v52 = new Vector(new Point(1, 1), new Point(2, 0));
-        assertTrue("Vectors intersection", Vectors.areVectorsIntersect(v51, v52));
+        assertTrue(Vectors.areVectorsIntersect(v51, v52), "Vectors intersection");
         Vector v61 = new Vector(new Point(7, 4), new Point(3, 10));
         Vector v62 = new Vector(new Point(7, 3), new Point(4, 8));
-        assertFalse("Vectors intersection", Vectors.areVectorsIntersect(v61, v62));
+        assertFalse(Vectors.areVectorsIntersect(v61, v62), "Vectors intersection");
     }
 
     @Test
     public void hasIntersections() {
     	Pair<Vector, Vector> pair = Vectors.hasIntersections(vectorsSet1);
-        assertNotNull("has intersection", pair);
-        assertTrue("wrong vectors intersection", 
-        		(pair.getFirst().getName().equals("3") && pair.getSecond().getName().equals("4")) ||
-        		(pair.getFirst().getName().equals("4") && pair.getSecond().getName().equals("3")));
+        assertNotNull(pair, "has intersection");
+        assertTrue((pair.first().getName().equals("3") && pair.second().getName().equals("4")) ||
+        		   (pair.first().getName().equals("4") && pair.second().getName().equals("3")),
+                   "wrong vectors intersection");
         pair = Vectors.hasIntersections(vectorsSet2);
-        assertNull("has intersection", pair);
+        assertNull(pair, "has intersection");
     }
 }

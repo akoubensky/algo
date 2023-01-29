@@ -17,10 +17,10 @@ public class Vectors {
 	 * @return		Направление поворота
 	 */
     public static Direction getDirection(Vector v1, Vector v2) {
-        int x1 = v1.getFinish().getX() - v1.getStart().getX();
-        int x2 = v2.getFinish().getX() - v2.getStart().getX();
-        int y1 = v1.getFinish().getY() - v1.getStart().getY();
-        int y2 = v2.getFinish().getY() - v2.getStart().getY();
+        int x1 = v1.getFinish().x() - v1.getStart().x();
+        int x2 = v2.getFinish().x() - v2.getStart().x();
+        int y1 = v1.getFinish().y() - v1.getStart().y();
+        int y2 = v2.getFinish().y() - v2.getStart().y();
         int determinant = x1 * y2 - x2 * y1;
         return determinant > 0 ? Direction.POSITIVE :
                determinant < 0 ? Direction.NEGATIVE :
@@ -46,14 +46,14 @@ public class Vectors {
      * @return		true, если прямоугольники имеют общие точки, false в противном случае.
      */
     public static boolean areRectanglesIntersect(Vector v1, Vector v2) {
-        int x11 = v1.getStart().getX();
-        int x12 = v1.getFinish().getX();
-        int y11 = v1.getStart().getY();
-        int y12 = v1.getFinish().getY();
-        int x21 = v2.getStart().getX();
-        int x22 = v2.getFinish().getX();
-        int y21 = v2.getStart().getY();
-        int y22 = v2.getFinish().getY();
+        int x11 = v1.getStart().x();
+        int x12 = v1.getFinish().x();
+        int y11 = v1.getStart().y();
+        int y12 = v1.getFinish().y();
+        int x21 = v2.getStart().x();
+        int x22 = v2.getFinish().x();
+        int y21 = v2.getStart().y();
+        int y22 = v2.getFinish().y();
 
         return !(Math.max(x11, x12) < Math.min(x21, x22) || Math.min(x11, x12) > Math.max(x21, x22) ||
                  Math.max(y11, y12) < Math.min(y21, y22) || Math.min(y11, y12) > Math.max(y21, y22));
@@ -108,14 +108,14 @@ public class Vectors {
         // Формируем множество критических точек и связываем их с векторами.
         // Каждый вектор попадает в множество два раза: с координатой начала и координатой конца.
         for (Vector v : vectors) {
-        	int ys = v.getMin().getY(); 
-        	int yf = v.getMax().getY();
+        	int ys = v.getMin().y();
+        	int yf = v.getMax().y();
         	Pair<List<Vector>, List<Vector>> lists = pointsMap.get(ys);
         	if (lists == null) pointsMap.put(ys, lists = new Pair<>(new ArrayList<>(), new ArrayList<>()));
-        	lists.getFirst().add(v);
+        	lists.first().add(v);
         	lists = pointsMap.get(yf);
         	if (lists == null) pointsMap.put(yf, lists = new Pair<>(new ArrayList<>(), new ArrayList<>()));
-        	lists.getSecond().add(v);
+        	lists.second().add(v);
         }
 
         // Множество векторов, пересекающих "движущуюся прямую" в текущей критической точке.
@@ -126,25 +126,25 @@ public class Vectors {
             Pair<List<Vector>, List<Vector>> pv = pointsMap.get(criticalPoint);
             
             // Добавляем те вектора, которые в данной критической точке имеют начала.
-            for (Vector v : pv.getFirst()) {
+            for (Vector v : pv.first()) {
             	// При добавлении вектора вычисляем "соседние" отрезки и проверяем,
             	// не пересекается ли добавляемый вектор с одним из "соседей".
                 Pair<Vector, Vector> siblings = vectorsSet.add(v);
-                if (siblings.getFirst() != null && areVectorsIntersect(v, siblings.getFirst())) {
-                    return new Pair<>(v, siblings.getFirst());
+                if (siblings.first() != null && areVectorsIntersect(v, siblings.first())) {
+                    return new Pair<>(v, siblings.first());
                 }
-                if (siblings.getSecond() != null && areVectorsIntersect(v, siblings.getSecond())) {
-                    return new Pair<>(v, siblings.getSecond());
+                if (siblings.second() != null && areVectorsIntersect(v, siblings.second())) {
+                    return new Pair<>(v, siblings.second());
                 }
             }
             
             // Удаляем те вектора, которые в данной критической точке имеют концы.
-            for (Vector v : pv.getSecond()) {
+            for (Vector v : pv.second()) {
             	// При удалении вектора вычисляем "соседние" отрезки и проверяем,
             	// не пересекается ли друг с другом эти "соседи".
                 Pair<Vector, Vector> siblings = vectorsSet.remove(v);
-                if (siblings.getFirst() != null && siblings.getSecond() != null &&
-                        areVectorsIntersect(siblings.getFirst(), siblings.getSecond())) {
+                if (siblings.first() != null && siblings.second() != null &&
+                        areVectorsIntersect(siblings.first(), siblings.second())) {
                     return siblings;
                 }
             }
